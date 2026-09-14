@@ -539,8 +539,126 @@
                 </div>
               </div>
 
+              <!-- Verified Security Findings & Decision Breakdown -->
+              <div class="findings-inspector" id="findingsInspector">
+                <div class="findings-inspector-header">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:18px;">📋</span>
+                    <div>
+                      <h4 style="font-size:14px; font-weight:800; color:#1E293B; margin:0;">Verified Security Findings &amp; Underwriting Explanation</h4>
+                      <span style="font-size:11px; color:#64748B;">Telemetry evaluated for <strong id="findingsDomainName">applicant domain</strong></span>
+                    </div>
+                  </div>
+                  <span class="findings-source-badge" id="findingsSourceBadge">Live Google Telemetry</span>
+                </div>
+
+                <!-- 4 Controls Grid -->
+                <div class="findings-grid">
+
+                  <!-- 1. MFA / 2SV -->
+                  <div class="finding-card" id="cardMfa">
+                    <div class="finding-card-header">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="finding-card-icon">🔒</span>
+                        <strong class="finding-card-title">2-Step Verification (MFA)</strong>
+                      </div>
+                      <span class="finding-pill" id="pillMfa">VERIFYING</span>
+                    </div>
+                    <div class="finding-observed">
+                      <span class="label">Observed:</span>
+                      <span class="value" id="valMfa">-</span>
+                    </div>
+                    <div class="finding-explanation" id="explMfa">-</div>
+                    <div class="finding-impact" id="impactMfa">-</div>
+                  </div>
+
+                  <!-- 2. DMARC / SPF -->
+                  <div class="finding-card" id="cardDmarc">
+                    <div class="finding-card-header">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="finding-card-icon">✉️</span>
+                        <strong class="finding-card-title">Email Spoofing (DMARC/SPF)</strong>
+                      </div>
+                      <span class="finding-pill" id="pillDmarc">VERIFYING</span>
+                    </div>
+                    <div class="finding-observed">
+                      <span class="label">Observed:</span>
+                      <span class="value" id="valDmarc">-</span>
+                    </div>
+                    <div class="finding-explanation" id="explDmarc">-</div>
+                    <div class="finding-impact" id="impactDmarc">-</div>
+                  </div>
+
+                  <!-- 3. Cloud DLP -->
+                  <div class="finding-card" id="cardDlp">
+                    <div class="finding-card-header">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="finding-card-icon">🛡️</span>
+                        <strong class="finding-card-title">Cloud Data Loss Prevention</strong>
+                      </div>
+                      <span class="finding-pill" id="pillDlp">VERIFYING</span>
+                    </div>
+                    <div class="finding-observed">
+                      <span class="label">Observed:</span>
+                      <span class="value" id="valDlp">-</span>
+                    </div>
+                    <div class="finding-explanation" id="explDlp">-</div>
+                    <div class="finding-impact" id="impactDlp">-</div>
+                  </div>
+
+                  <!-- 4. Google Vault -->
+                  <div class="finding-card" id="cardVault">
+                    <div class="finding-card-header">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="finding-card-icon">📦</span>
+                        <strong class="finding-card-title">Google Vault &amp; Retention</strong>
+                      </div>
+                      <span class="finding-pill" id="pillVault">VERIFYING</span>
+                    </div>
+                    <div class="finding-observed">
+                      <span class="label">Observed:</span>
+                      <span class="value" id="valVault">-</span>
+                    </div>
+                    <div class="finding-explanation" id="explVault">-</div>
+                    <div class="finding-impact" id="impactVault">-</div>
+                  </div>
+
+                </div>
+
+                <!-- Remediation & Savings Opportunities Box (Shown when not 100% preferred) -->
+                <div class="remediation-box" id="remediationBox" style="display:none;">
+                  <div class="remediation-title">
+                    <span>💡 Actionable Steps to Improve Your Rating &amp; Rate:</span>
+                  </div>
+                  <div class="remediation-items" id="remediationItemsList"></div>
+                </div>
+
+                <!-- Collapsible Raw Telemetry & Customer Data Inspection -->
+                <details class="raw-inspector-details">
+                  <summary class="raw-inspector-summary">
+                    <span style="font-weight:700;">🔍 Inspect Raw Telemetry Data &amp; DNS Records</span>
+                    <span style="font-size:11px; color:#2563EB;">Click to view / copy your data</span>
+                  </summary>
+                  <div class="raw-inspector-body">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                      <span style="font-size:11px; color:#475569; font-weight:600;">Verified Account: <strong id="rawVerifiedAccount" style="color:#0F172A;">-</strong></span>
+                      <button type="button" class="btn-copy-raw" id="btnCopyRawTelemetry" onclick="copyTelemetryData()">
+                        📋 Copy Raw Telemetry JSON
+                      </button>
+                    </div>
+                    <pre class="raw-json-display" id="rawJsonDisplay"></pre>
+
+                    <div id="rawAuditLogContainer" style="margin-top:10px;">
+                      <div style="font-size:11px; font-weight:700; color:#1E293B; margin-bottom:4px;">Google API Query Audit Trail:</div>
+                      <ul class="raw-audit-list" id="rawAuditList"></ul>
+                    </div>
+                  </div>
+                </details>
+
+              </div>
+
               <!-- Instant Bind Action -->
-              <button class="btn-next" style="width:100%; padding:14px; font-size:16px; background-color:var(--hartford-maroon);" onclick="bindPolicy()">
+              <button class="btn-next" id="btnBindPolicy" style="width:100%; padding:14px; font-size:16px; background-color:var(--hartford-maroon);" onclick="bindPolicy()">
                 Bind Policy &amp; Download Binder
               </button>
 
