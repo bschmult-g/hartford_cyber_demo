@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Hartford - Cyber Insurance Flow | Project Beacon PoT</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="icon" type="image/svg+xml" href="/static/img/hartford_logo.svg">
+</head>
+<body>
+
+  <!-- Top Simulated Chrome Browser Bar -->
+  <div class="browser-bar">
+    <div class="browser-controls">
+      <span class="browser-dot dot-red"></span>
+      <span class="browser-dot dot-yellow"></span>
+      <span class="browser-dot dot-green"></span>
+    </div>
+    <div class="browser-address">
+      <span style="color:#10B981;">🔒</span>
+      <span>thehartford.com/cyber-insurance</span>
+    </div>
+  </div>
+
+  <!-- Bookmarks Simulation from Slide 2 -->
+  <div class="browser-bookmarks">
+    <span>⭐ My Feedback</span>
+    <span>📁 Meg &amp; Alli</span>
+    <span>📁 GE</span>
+    <span>📁 Deals</span>
+    <span>📁 Clients</span>
+    <span>✨ GE Spark</span>
+    <span>🤖 GE Sales Agent</span>
+    <span>💵 Pricing</span>
+    <span>🤝 Partners</span>
+    <span>🔑 Enter Passphrase</span>
+  </div>
+
+  <!-- Main The Hartford Header -->
+  <header class="hartford-header">
+    <div class="header-brand">
+      <img src="/static/img/hartford_logo.svg" alt="The Hartford Logo">
+      <div class="header-title" id="headerSubTitle">Small Business Insurance Quote</div>
+    </div>
+    <div class="header-support">
+      <div>Need Help? Call The Hartford</div>
+      <div class="header-phone">1-800-581-3703</div>
+      <div style="font-size:11px;">M-F 8am to 8pm ET</div>
+    </div>
+  </header>
+
+  <!-- Stepper Indicator (Slides 3-6) -->
+  <div class="stepper-container" id="stepperNav" style="display:none;">
+    <div class="stepper-step active" id="stepIndicator1" onclick="navigateToStep(1)">
+      <div class="step-icon">📍</div>
+      <div class="step-label">Basics</div>
+    </div>
+    <div class="stepper-step" id="stepIndicator2" onclick="navigateToStep(4)">
+      <div class="step-icon">🛡️</div>
+      <div class="step-label">Coverages</div>
+    </div>
+    <div class="stepper-step" id="stepIndicator3">
+      <div class="step-icon">🏢</div>
+      <div class="step-label">Details</div>
+    </div>
+    <div class="stepper-step" id="stepIndicator4" onclick="navigateToStep(5)">
+      <div class="step-icon">💲</div>
+      <div class="step-label">Price</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main id="appContainer">
+
+    <!-- ==================== VIEW 0: LANDING PAGE (SLIDE 2) ==================== -->
+    <section class="flow-view active" id="viewLanding">
+      <div class="hero-container">
+        <div class="hero-card">
+          <div class="hero-content">
+            <h1 class="hero-title">Protect Your Business With Cyber Insurance</h1>
+            <p class="hero-desc">Find coverage that helps your business recover quickly and confidently. Get a fast and free quote from The Hartford today.</p>
+            <button class="btn-quote-today" onclick="startQuoteFlow()">Quote Today</button>
+          </div>
+          <div class="hero-image">
+            <svg viewBox="0 0 400 320" width="360" height="280">
+              <rect width="400" height="320" rx="16" fill="#FDE2E4"/>
+              <circle cx="200" cy="110" r="50" fill="#E87A90"/>
+              <!-- Smiling business woman avatar -->
+              <path d="M165 95 Q200 65 235 95 Q250 140 230 155 Q200 170 170 155 Z" fill="#8C5036"/>
+              <circle cx="200" cy="120" r="32" fill="#E8B490"/>
+              <ellipse cx="190" cy="118" rx="3" ry="4" fill="#333"/>
+              <ellipse cx="210" cy="118" rx="3" ry="4" fill="#333"/>
+              <path d="M190 132 Q200 142 210 132" stroke="#B33951" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              <!-- Denim overalls -->
+              <path d="M140 180 L260 180 L250 310 L150 310 Z" fill="#2B5B84"/>
+              <path d="M170 180 L170 240 L230 240 L230 180 Z" fill="#F6A6B2"/>
+              <!-- Retail clothing rack background -->
+              <line x1="60" y1="80" x2="130" y2="80" stroke="#7E1235" stroke-width="4"/>
+              <rect x="75" y="85" width="20" height="90" rx="4" fill="#E5989B"/>
+              <rect x="100" y="85" width="20" height="110" rx="4" fill="#B5838D"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 1: STEP 1 - BASICS (SLIDE 3) ==================== -->
+    <section class="flow-view" id="viewStep1">
+      <div class="form-container">
+        <div class="form-header">
+          <div class="form-header-icon">📍</div>
+          <h2 class="form-header-title">Let's start with some basic information</h2>
+        </div>
+        <div class="wizard-card">
+          <div class="form-group">
+            <label class="form-label">Which best describes your business? <span class="info-tooltip">i</span></label>
+            <div class="form-radio-group">
+              <label class="radio-option">
+                <input type="radio" name="businessStatus" value="insured" checked>
+                <span>I'm in business and have insurance</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="businessStatus" value="not_insured">
+                <span>I'm in business, but don't have insurance yet</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="businessStatus" value="starting">
+                <span>I'm starting a business and curious about insurance</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">How is your business structured?</label>
+            <select class="form-select" id="businessStructure">
+              <option value="S-Corporation" selected>S-Corporation</option>
+              <option value="C-Corporation">C-Corporation</option>
+              <option value="LLC">Limited Liability Company (LLC)</option>
+              <option value="Sole-Proprietor">Sole Proprietorship</option>
+              <option value="Partnership">Partnership</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Registered business name</label>
+            <input type="text" class="form-input" id="registeredBusinessName" value="Foremy corp">
+            <div class="form-helper">This name will appear on your policy</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-checkbox-label">
+              <input type="checkbox" id="hasDba">
+              <span>I'd like to add a Doing Business As (DBA) name</span>
+            </label>
+          </div>
+
+          <div class="captcha-box">
+            <div class="captcha-checkbox">
+              <input type="checkbox" checked disabled>
+              <span>I'm not a robot</span>
+            </div>
+            <div class="captcha-logo">
+              reCAPTCHA<br><span style="font-size:8px;">Privacy - Terms</span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-next" onclick="navigateToStep(2)">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: STEP 2 - LOCATION (SLIDE 4) ==================== -->
+    <section class="flow-view" id="viewStep2">
+      <div class="form-container">
+        <div class="form-header">
+          <div class="form-header-icon">🚩</div>
+          <h2 class="form-header-title">Tell us about where you do business</h2>
+        </div>
+        <div class="wizard-card">
+          <div class="form-group">
+            <label class="form-label">What type of location is your business based out of?</label>
+            <div class="form-radio-group">
+              <label class="radio-option">
+                <input type="radio" name="locationType" value="commercial_condo">
+                <span>Commercial condominium</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="locationType" value="commercial_building">
+                <span>Commercial building</span>
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="locationType" value="personal_residence" checked>
+                <span>Personal residence</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Home street address</label>
+            <div style="position:relative;">
+              <input type="text" class="form-input" id="streetAddress" value="224 Old Post Rd">
+              <span style="position:absolute; right:12px; top:12px; cursor:pointer; color:#9CA3AF;">✕</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Apt/Suite</label>
+            <input type="text" class="form-input" id="aptSuite" placeholder="">
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Zip Code</label>
+              <input type="text" class="form-input" id="zipCode" value="06824">
+            </div>
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input type="text" class="form-input" id="city" value="Fairfield">
+            </div>
+            <div class="form-group">
+              <label class="form-label">State</label>
+              <input type="text" class="form-input" id="state" value="CT">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Does your business have any other locations? <span class="info-tooltip">i</span></label>
+            <div class="segmented-group">
+              <button class="segmented-btn" type="button" onclick="setSegment(this, 'otherLoc')">Yes</button>
+              <button class="segmented-btn active" type="button" onclick="setSegment(this, 'otherLoc')">No</button>
+            </div>
+            <div class="form-helper">Two separate buildings at the same address, such as warehouses or back offices, count as multiple locations.</div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-next" onclick="navigateToStep(3)">Next</button>
+            <button class="btn-prev" onclick="navigateToStep(1)">Previous</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: STEP 3 - BUSINESS & CONTACT (SLIDE 5) ==================== -->
+    <section class="flow-view" id="viewStep3">
+      <div class="form-container">
+        <div class="form-header">
+          <div class="form-header-icon">🏢</div>
+          <h2 class="form-header-title">Next tell us about your business</h2>
+        </div>
+        <div class="wizard-card">
+          <div class="form-group">
+            <label class="form-label">Is this business a non-profit?</label>
+            <div class="segmented-group">
+              <button class="segmented-btn" type="button" onclick="setSegment(this, 'nonProfit')">Yes</button>
+              <button class="segmented-btn active" type="button" onclick="setSegment(this, 'nonProfit')">No</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">What does this business do? <span class="info-tooltip">i</span></label>
+            <input type="text" class="form-input" id="businessActivity" value="Software & Internet Design Services">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Do you offer additional services? <span class="info-tooltip">i</span></label>
+            <div class="segmented-group">
+              <button class="segmented-btn" type="button" onclick="setSegment(this, 'additionalServices')">Yes</button>
+              <button class="segmented-btn active" type="button" onclick="setSegment(this, 'additionalServices')">No</button>
+            </div>
+          </div>
+
+          <div class="form-grid-3">
+            <div class="form-group">
+              <label class="form-label">Year established</label>
+              <input type="text" class="form-input" id="yearEstablished" value="2019">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Executive officers</label>
+              <input type="text" class="form-input" id="numOfficers" value="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Employees</label>
+              <input type="text" class="form-input" id="numEmployees" value="10">
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid #E2E8F0; margin: 24px 0 16px 0; padding-top: 20px;">
+            <div style="font-size:18px; font-weight:700; color:#111827; margin-bottom:16px;">
+              ✉️ And how can we reach you?
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="form-label">Owner First Name</label>
+              <input type="text" class="form-input" id="ownerFirstName" value="Sarah">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Owner Last Name</label>
+              <input type="text" class="form-input" id="ownerLastName" value="Connor">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Are you the owner?</label>
+            <div class="segmented-group">
+              <button class="segmented-btn active" type="button" onclick="setSegment(this, 'isOwner')">Yes</button>
+              <button class="segmented-btn" type="button" onclick="setSegment(this, 'isOwner')">No</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Business Domain / Email Address</label>
+            <input type="email" class="form-input" id="ownerEmail" value="sarah@foremycorp.com" onchange="syncDomainFromEmail()">
+            <div class="form-helper">Domain <strong id="detectedDomainDisplay">foremycorp.com</strong> will be used for real-time security posture validation.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Contact Phone Number</label>
+            <input type="tel" class="form-input" id="contactPhone" value="(203) 555-0199">
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-next" onclick="navigateToStep(4)">Next</button>
+            <button class="btn-prev" onclick="navigateToStep(2)">Previous</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: STEP 4 - COVERAGES (SLIDE 6) ==================== -->
+    <section class="flow-view" id="viewStep4">
+      <div class="form-container">
+        <div class="form-header">
+          <div class="form-header-icon">🛡️</div>
+          <h2 class="form-header-title">Choose which types of coverage you need</h2>
+        </div>
+        <div class="wizard-card">
+          <div class="coverage-list">
+
+            <!-- Cyber Liability / Data Breach (FEATURED) -->
+            <div class="coverage-item featured">
+              <div class="coverage-info">
+                <span class="coverage-badge">FEATURED • PROJECT BEACON</span>
+                <div class="coverage-title">Data Breach (a.k.a. Cyber Liability)</div>
+                <div class="coverage-desc">Protects against ransomware, business email compromise, customer notification costs, and forensic investigations.</div>
+              </div>
+              <div>
+                <input type="checkbox" id="covCyber" checked style="width:20px; height:20px; accent-color:var(--hartford-maroon);">
+              </div>
+            </div>
+
+            <div class="coverage-item">
+              <div class="coverage-info">
+                <div class="coverage-title">General Liability</div>
+                <div class="coverage-desc">Protects your business from slip-and-fall claims, property damage, and bodily injury.</div>
+              </div>
+              <div>
+                <input type="checkbox" id="covGL" checked style="width:20px; height:20px;">
+              </div>
+            </div>
+
+            <div class="coverage-item">
+              <div class="coverage-info">
+                <div class="coverage-title">Professional Liability (E&amp;O)</div>
+                <div class="coverage-desc">Helps cover defense costs if accused of work mistakes, code errors, or negligence.</div>
+              </div>
+              <div>
+                <input type="checkbox" id="covPL" checked style="width:20px; height:20px;">
+              </div>
+            </div>
+
+            <div class="coverage-item">
+              <div class="coverage-info">
+                <div class="coverage-title">Workers' Compensation</div>
+                <div class="coverage-desc">Coverage for work-related illnesses and employee injuries.</div>
+              </div>
+              <div>
+                <input type="checkbox" id="covWC" style="width:20px; height:20px;">
+              </div>
+            </div>
+
+            <div class="coverage-item">
+              <div class="coverage-info">
+                <div class="coverage-title">Commercial Auto</div>
+                <div class="coverage-desc">Covers vehicle damage and collision liability for company vehicles.</div>
+              </div>
+              <div>
+                <input type="checkbox" id="covAuto" style="width:20px; height:20px;">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">When do you want your policy to start?</label>
+            <input type="date" class="form-input" id="policyStartDate" value="2026-09-15">
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-next" onclick="navigateToStep(5)">Next</button>
+            <button class="btn-prev" onclick="navigateToStep(3)">Previous</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 5: STEP 5 - THE CALL WALL VS BEACON (SLIDE 7) ==================== -->
+    <section class="flow-view" id="viewStep5">
+      <div class="step5-container">
+
+        <div style="text-align:center; margin-bottom:28px;">
+          <h2 style="font-size:30px; font-weight:800; color:#111827;">Cyber Underwriting &amp; Rating Decision</h2>
+          <p style="color:#4B5563; font-size:16px;">Comparing the traditional questionnaire drop-off vs. Project Beacon automated telemetry.</p>
+        </div>
+
+        <div class="step5-grid">
+
+          <!-- TRADITIONAL CURRENT PATH (MIRRORS SLIDE 7 EXACTLY) -->
+          <div class="traditional-card">
+            <div class="call-icon">📞</div>
+            <h3 class="call-title">Give us a call to finish your quote!</h3>
+            <p class="call-desc">We think a quick phone call will help us get you the most accurate price and coverage for your business. We're looking forward to hearing from you!</p>
+
+            <div class="phone-badge-box">
+              <div class="phone-number">1-800-581-3703</div>
+              <div class="phone-hours">M-F 8am to 8pm ET</div>
+            </div>
+
+            <div class="call-drawbacks">
+              <strong>⚠️ The Traditional Friction:</strong>
+              <ul style="padding-left:18px; margin-top:6px; line-height:1.4;">
+                <li>Requires 45-question manual technical questionnaire</li>
+                <li>Requires 30-min phone interview with underwriter</li>
+                <li>5 to 7 business day quote turnaround</li>
+                <li>70%+ small business applicant drop-off rate</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- PROJECT BEACON FAST-TRACK -->
+          <div class="beacon-card">
+            <span class="beacon-tag">Project Beacon</span>
+            <div class="beacon-header">
+              <img src="/static/img/google_logo.svg" alt="Google" width="28">
+              <h3>Auto-Verify with Google Workspace</h3>
+            </div>
+            <p class="beacon-sub">
+              Skip the 40-question questionnaire and phone call! Connect your Google Workspace to evaluate your security posture in 10 seconds for an <strong>instant quote and up to 25% Preferred Risk discount</strong>.
+            </p>
+
+            <div class="beacon-pillars">
+              <div class="pillar-item">
+                <span class="pillar-icon">🔒</span>
+                <span>MFA (2SV) Enforced</span>
+              </div>
+              <div class="pillar-item">
+                <span class="pillar-icon">✉️</span>
+                <span>SPF / DMARC Active</span>
+              </div>
+              <div class="pillar-item">
+                <span class="pillar-icon">🛡️</span>
+                <span>Cloud DLP Rules</span>
+              </div>
+              <div class="pillar-item">
+                <span class="pillar-icon">📦</span>
+                <span>Vault &amp; Retention</span>
+              </div>
+            </div>
+
+            <!-- Auto-Verify Action Button -->
+            <button class="btn-google-verify" id="btnTriggerGoogleVerify" onclick="openOAuthModal()">
+              <img src="/static/img/google_logo.svg" alt="Google" width="20">
+              <span>Auto-Verify Security Posture</span>
+            </button>
+
+            <!-- Scanning State (Hidden by default) -->
+            <div class="scan-progress-box" id="scanProgressBox">
+              <div style="font-weight:700; color:#1E3A8A; margin-bottom:12px; font-size:14px;">
+                Ephemeral Telemetry Inspection in Progress...
+              </div>
+              <div class="scan-step" id="scanStep1">
+                <div class="scan-spinner"></div>
+                <span>Validating Super Admin OAuth 2.0 Identity...</span>
+              </div>
+              <div class="scan-step" id="scanStep2">
+                <div class="scan-spinner"></div>
+                <span>Querying Google Admin SDK Reports API (accounts:is_2sv_enforced)...</span>
+              </div>
+              <div class="scan-step" id="scanStep3">
+                <div class="scan-spinner"></div>
+                <span>Resolving Live DNS Posture (SPF &amp; DMARC for <span id="scanDomainName">foremycorp.com</span>)...</span>
+              </div>
+              <div class="scan-step" id="scanStep4">
+                <div class="scan-spinner"></div>
+                <span>Verifying Cloud DLP inspection and Google Vault policies...</span>
+              </div>
+            </div>
+
+            <!-- Final Quote & Zero-Retention Receipt Card -->
+            <div class="quote-result-card" id="quoteResultCard">
+              <div class="quote-header-badge">
+                <div>
+                  <span class="badge-preferred" id="quoteTierBadge">PREFERRED RISK (Tier 1)</span>
+                  <div style="font-size:11px; color:#6B7280; margin-top:4px;">Decision: <strong id="quoteDecision">APPROVED INSTANTLY</strong></div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-size:11px; color:#6B7280;">Coverage Limit</div>
+                  <div style="font-size:16px; font-weight:800; color:#111827;">$2,000,000 Aggregate</div>
+                </div>
+              </div>
+
+              <p id="quoteSummaryText" style="font-size:13px; color:#374151; margin-bottom:14px;">
+                Applicant verified with highest cyber security posture. Instant policy issuance approved at 25% Preferred Risk discount.
+              </p>
+
+              <div class="pricing-display">
+                <div>
+                  <div class="pricing-item-label">Annual Premium</div>
+                  <div class="pricing-item-val" id="quoteAnnualPrice">$6,375<span style="font-size:14px; font-weight:500;">/yr</span></div>
+                  <div class="pricing-discount-tag" id="quoteDiscountPct">Saved 25% (-$2,125)</div>
+                </div>
+                <div>
+                  <div class="pricing-item-label">Monthly Rate</div>
+                  <div class="pricing-item-val" id="quoteMonthlyPrice">$531<span style="font-size:14px; font-weight:500;">/mo</span></div>
+                  <div style="font-size:11px; color:#6B7280; margin-top:4px;">Deductible: $5,000</div>
+                </div>
+              </div>
+
+              <!-- Instant Bind Action -->
+              <button class="btn-next" style="width:100%; padding:14px; font-size:16px; background-color:var(--hartford-maroon);" onclick="bindPolicy()">
+                Bind Policy &amp; Download Binder
+              </button>
+
+              <!-- Zero-Retention Attestation Receipt -->
+              <div class="attestation-receipt">
+                <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:bold; color:#0F766E;">
+                  <span>🛡️ ZERO-RETENTION PROOF ATTESTATION</span>
+                  <span>STATUS: EPHEMERAL DISCARD</span>
+                </div>
+                <div>Token: <span id="attestToken">hig_gcp_attest_7f8a9...</span></div>
+                <div>SHA-256 Fingerprint: <span id="attestHash">b43c8d19...</span></div>
+                <div style="margin-top:4px; color:#64748B;">No employee records or raw IT logs retained. Ephemerally processed under SOC2/ISO 27001 zero-retention rules.</div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== GOOGLE SUPER ADMIN OAUTH MODAL ==================== -->
+  <div class="modal-overlay" id="oauthModal">
+    <div class="oauth-modal">
+      <div class="oauth-logo-row">
+        <img src="/static/img/google_logo.svg" alt="Google" width="32">
+        <span style="font-size:12px; color:#6B7280; font-weight:600;">Sign in with Google</span>
+      </div>
+
+      <h3 style="font-size:20px; font-weight:700; color:#202124; margin-bottom:8px;">
+        The Hartford Cyber Underwriting
+      </h3>
+      <p style="font-size:13px; color:#5F6368;">
+        The Hartford wants to access read-only security telemetry for domain <strong id="oauthModalDomain">foremycorp.com</strong> to verify your insurance eligibility:
+      </p>
+
+      <div class="oauth-scopes">
+        <div class="scope-item">
+          <span>✔️</span>
+          <div>
+            <strong>Google Admin SDK Reports API:</strong> Read 2-Step Verification (2SV) enforcement status and enrollment percentages.
+          </div>
+        </div>
+        <div class="scope-item">
+          <span>✔️</span>
+          <div>
+            <strong>Google Workspace Policy &amp; Rules API:</strong> Verify active Data Loss Prevention (DLP) and retention rules.
+          </div>
+        </div>
+        <div class="scope-item">
+          <span>✔️</span>
+          <div>
+            <strong>Zero-Retention Ephemeral Access:</strong> HIG processes this in memory to calculate rating, then immediately purges raw telemetry.
+          </div>
+        </div>
+      </div>
+
+      <div class="oauth-actions">
+        <button class="btn-oauth-cancel" onclick="closeOAuthModal()">Cancel</button>
+        <button class="btn-oauth-allow" onclick="confirmOAuthConsent()">Allow &amp; Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== FLOATING DEMO CONTROLS ==================== -->
+  <div class="demo-floating-bar">
+    <button class="btn-studio-toggle" onclick="toggleStudioDrawer()">
+      <span>⚙️</span>
+      <span>Underwriter Telemetry &amp; What-If Studio</span>
+    </button>
+  </div>
+
+  <!-- ==================== UNDERWRITER TELEMETRY & WHAT-IF DRAWER ==================== -->
+  <aside class="studio-drawer" id="studioDrawer">
+    <div class="studio-header">
+      <div>
+        <div style="font-weight:800; font-size:16px;">Underwriter Studio</div>
+        <div style="font-size:11px; opacity:0.8;">Live Telemetry &amp; Actuarial Simulator</div>
+      </div>
+      <button onclick="toggleStudioDrawer()" style="background:none; border:none; color:#FFFFFF; font-size:20px; cursor:pointer;">✕</button>
+    </div>
+
+    <div class="studio-body">
+
+      <!-- SECTION 1: Canned Scenarios -->
+      <div class="studio-section">
+        <div class="studio-title">Quick Demo Scenarios</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <button class="radio-option" style="text-align:left;" onclick="loadDemoScenario('foremycorp.com')">
+            <div>
+              <strong style="color:#166534;">🟢 Foremy Corp (Preferred Risk)</strong>
+              <div style="font-size:11px; color:#6B7280;">100% MFA, DMARC reject, DLP active $\rightarrow$ 25% Discount ($6,375/yr)</div>
+            </div>
+          </button>
+          <button class="radio-option" style="text-align:left;" onclick="loadDemoScenario('partialcompliance.com')">
+            <div>
+              <strong style="color:#B45309;">🟡 Partial Compliance SMB</strong>
+              <div style="font-size:11px; color:#6B7280;">MFA enabled, but DMARC is 'none' &amp; no DLP $\rightarrow$ Conditional ($7,650/yr)</div>
+            </div>
+          </button>
+          <button class="radio-option" style="text-align:left;" onclick="loadDemoScenario('vulnerableretail.com')">
+            <div>
+              <strong style="color:#991B1B;">🔴 Vulnerable Retailer</strong>
+              <div style="font-size:11px; color:#6B7280;">No MFA, missing DMARC $\rightarrow$ Declined (High Ransomware Risk)</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Live DNS Inspector -->
+      <div class="studio-section">
+        <div class="studio-title">Live Real-Time DNS Inspector</div>
+        <p style="font-size:12px; color:#64748B; margin-bottom:8px;">
+          Test any real-world domain (e.g. <code>thehartford.com</code>, <code>google.com</code>, or your company):
+        </p>
+        <div style="display:flex; gap:8px;">
+          <input type="text" class="form-input" id="liveDnsDomainInput" value="thehartford.com">
+          <button class="btn-next" style="padding:8px 16px; font-size:13px;" onclick="runLiveDnsCheck()">Probe DNS</button>
+        </div>
+        <div id="liveDnsResults" style="margin-top:10px; font-size:12px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:6px; padding:10px; display:none;">
+        </div>
+      </div>
+
+      <!-- SECTION 3: What-If Dynamic Sliders -->
+      <div class="studio-section">
+        <div class="studio-title">Actuarial What-If Sliders</div>
+        <p style="font-size:12px; color:#64748B; margin-bottom:12px;">
+          Toggle controls to see instantaneous premium and underwriting tier updates:
+        </p>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <div>
+            <label class="form-checkbox-label" style="font-weight:700;">
+              <input type="checkbox" id="whatifMfa" checked onchange="runWhatIfSimulation()">
+              <span>2-Step Verification (MFA) Enforced</span>
+            </label>
+            <div style="font-size:11px; color:#64748B; margin-left:24px;">Mandatory gate. Turning off instantly declines the risk.</div>
+          </div>
+
+          <div>
+            <label style="font-size:12px; font-weight:700; color:#1F2937; display:block; margin-bottom:4px;">DMARC Policy</label>
+            <select class="form-select" id="whatifDmarc" onchange="runWhatIfSimulation()" style="padding:6px 10px; font-size:13px;">
+              <option value="reject" selected>p=reject (Strongest - BEC Defense)</option>
+              <option value="quarantine">p=quarantine (Strict)</option>
+              <option value="none">p=none (Monitoring Only)</option>
+              <option value="missing">missing (No Record)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="form-checkbox-label" style="font-weight:700;">
+              <input type="checkbox" id="whatifDlp" checked onchange="runWhatIfSimulation()">
+              <span>Cloud DLP Rules Active (-4% discount)</span>
+            </label>
+          </div>
+
+          <div>
+            <label class="form-checkbox-label" style="font-weight:700;">
+              <input type="checkbox" id="whatifVault" checked onchange="runWhatIfSimulation()">
+              <span>Google Vault Retention Active (-3% discount)</span>
+            </label>
+          </div>
+
+          <!-- Live What-If Result Preview -->
+          <div id="whatIfResultBox" style="background:#F1F5F9; border-radius:8px; padding:14px; border:1px solid #CBD5E1; margin-top:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span id="whatifDecisionTag" style="font-weight:800; font-size:12px; color:#166534;">APPROVED</span>
+              <span id="whatifRateTag" style="font-weight:800; font-size:16px; color:#111827;">$6,375/yr</span>
+            </div>
+            <div id="whatifSummaryTag" style="font-size:11px; color:#4B5563;">
+              Full Preferred Risk rate with 25% discount.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </aside>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

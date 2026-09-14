@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 90" width="320" height="90">
+  <!-- The Hartford Stag Silhouette -->
+  <g fill="#8B1E41">
+    <!-- Antlers & Head -->
+    <path d="M52 14 C49 9, 44 6, 38 7 C40 10, 44 11, 46 13 C41 12, 36 12, 31 15 C35 17, 40 17, 44 18 C39 19, 34 21, 31 25 C36 24, 42 23, 47 23 C45 25, 43 28, 44 31 C47 29, 49 26, 51 23 C52 25, 54 28, 55 31 C57 28, 56 24, 55 21 C59 23, 63 24, 68 25 C65 22, 60 19, 56 18 C60 17, 65 16, 68 15 C63 12, 58 12, 53 13 C55 11, 59 10, 61 7 C55 6, 50 9, 48 14 Z"/>
+    <!-- Stag Body, Neck, Legs standing on rock -->
+    <path d="M48 24 C45 27, 43 32, 43 37 C43 41, 46 44, 48 48 C44 50, 39 52, 35 56 C31 60, 29 66, 30 72 L32 78 L34 78 L36 71 C38 68, 42 66, 45 66 L47 78 L49 78 L49 66 C53 66, 58 66, 62 67 L65 78 L67 78 L65 65 C67 63, 69 60, 69 56 C69 50, 66 45, 62 42 L58 35 C57 31, 56 27, 54 24 Z"/>
+    <!-- Rocky Base -->
+    <path d="M22 78 L78 78 C79 81, 75 83, 70 83 L28 83 C24 83, 21 80, 22 78 Z"/>
+  </g>
+  <!-- Typography -->
+  <text x="95" y="44" font-family="'Times New Roman', Georgia, serif" font-size="28" font-weight="700" letter-spacing="1.5" fill="#111827">THE</text>
+  <text x="95" y="74" font-family="'Times New Roman', Georgia, serif" font-size="34" font-weight="800" letter-spacing="2.5" fill="#111827">HARTFORD</text>
+</svg>

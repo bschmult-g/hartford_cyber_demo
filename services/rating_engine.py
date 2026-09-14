@@ -1,0 +1,160 @@
+"""
+Project Beacon - The Hartford Underwriting Rating Engine
+Evaluates security telemetry against cyber actuarial risk models.
+"""
+
+from typing import Dict, Any, List
+
+def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Evaluates in-memory telemetry against Hartford rating guidelines.
+    Returns risk classification, premium quote, credits, and remediation steps.
+    """
+    mfa_enforced = telemetry.get("mfa_enforced", False)
+    mfa_pct = telemetry.get("mfa_enrolled_pct", 0.0)
+    spf_valid = telemetry.get("spf_valid", False)
+    dmarc_policy = telemetry.get("dmarc_policy", "missing").lower()
+    dlp_active = telemetry.get("dlp_rules_active", False)
+    vault_active = telemetry.get("vault_retention_active", False)
+
+    base_annual_premium = 8500.00
+    base_limit = 2000000.00  # $2,000,000
+    deductible = 5000.00
+
+    credits: List[Dict[str, Any]] = []
+    remediations: List[Dict[str, Any]] = []
+    
+    # 1. Critical Hard Gate: Multi-Factor Authentication
+    if not mfa_enforced or mfa_pct < 80.0:
+        return {
+            "decision": "DECLINED",
+            "tier": "HIGH_RISK",
+            "tier_display": "Declined - High Ransomware Exposure",
+            "status_color": "crimson",
+            "summary": "Application declined due to unenforced Multi-Factor Authentication. Unprotected credentials account for over 80% of cyber extortion claims.",
+            "base_premium": base_annual_premium,
+            "total_discount_pct": 0.0,
+            "discount_amount": 0.0,
+            "final_annual_premium": None,
+            "final_monthly_premium": None,
+            "coverage_limit": 0,
+            "deductible": 0,
+            "remediations": [
+                {
+                    "control": "Enforce 2-Step Verification",
+                    "impact": "Unlocks underwriting eligibility & 10% base discount",
+                    "action": "Enable org-wide 2SV enforcement in Google Workspace Admin Console (Security > Authentication > 2-Step Verification)."
+                }
+            ],
+            "credits": []
+        }
+
+    # MFA Passed
+    mfa_credit_pct = 10.0
+    mfa_credit_amt = base_annual_premium * (mfa_credit_pct / 100.0)
+    credits.append({
+        "name": "2-Step Verification Enforced",
+        "description": "100% org coverage with hardware key / TOTP support",
+        "pct": mfa_credit_pct,
+        "amount": mfa_credit_amt
+    })
+
+    # 2. Email Authentication (SPF + DMARC)
+    dmarc_secure = dmarc_policy in ["reject", "quarantine"]
+    if spf_valid and dmarc_secure:
+        email_credit_pct = 8.0
+        email_credit_amt = base_annual_premium * (email_credit_pct / 100.0)
+        credits.append({
+            "name": "Email Spoofing Defense (SPF + Strict DMARC)",
+            "description": f"DMARC enforcement policy '{dmarc_policy}' prevents executive impersonation (BEC)",
+            "pct": email_credit_pct,
+            "amount": email_credit_amt
+        })
+    else:
+        if not spf_valid:
+            remediations.append({
+                "control": "Implement Valid SPF Record",
+                "impact": "Required for email security discount (-4% premium)",
+                "action": "Add DNS TXT record 'v=spf1 include:_spf.google.com ~all' to authorize sending servers."
+            })
+        if dmarc_policy in ["none", "missing"]:
+            remediations.append({
+                "control": "Tighten DMARC Policy to Quarantine or Reject",
+                "impact": "Unlocks additional $680/yr (8%) Business Email Compromise discount",
+                "action": f"Update _dmarc DNS record policy from '{dmarc_policy}' to 'p=quarantine' or 'p=reject'."
+            })
+
+    # 3. Data Loss Prevention (DLP)
+    if dlp_active:
+        dlp_credit_pct = 4.0
+        dlp_credit_amt = base_annual_premium * (dlp_credit_pct / 100.0)
+        credits.append({
+            "name": "Data Loss Prevention (DLP) Rules Active",
+            "description": "Active inspection of PII/PCI across Drive and Gmail",
+            "pct": dlp_credit_pct,
+            "amount": dlp_credit_amt
+        })
+    else:
+        remediations.append({
+            "control": "Activate Workspace DLP Rules",
+            "impact": "Unlocks $340/yr (4%) Data Exfiltration discount",
+            "action": "Configure DLP inspection rules in Google Workspace Admin Console to monitor sensitive customer data."
+        })
+
+    # 4. Vault & Retention Hygiene
+    if vault_active:
+        vault_credit_pct = 3.0
+        vault_credit_amt = base_annual_premium * (vault_credit_pct / 100.0)
+        credits.append({
+            "name": "Google Vault Audit Retention",
+            "description": "Tamper-evident legal holds & audit logging established",
+            "pct": vault_credit_pct,
+            "amount": vault_credit_amt
+        })
+    else:
+        remediations.append({
+            "control": "Configure Retention Policies in Google Vault",
+            "impact": "Unlocks $255/yr (3%) Forensic Recovery discount",
+            "action": "Set default retention and audit policies for email and Drive storage."
+        })
+
+    # Calculate Totals
+    total_discount_pct = sum(c["pct"] for c in credits)
+    total_discount_amt = sum(c["amount"] for c in credits)
+    final_annual_premium = base_annual_premium - total_discount_amt
+    final_monthly_premium = round(final_annual_premium / 12.0, 2)
+
+    # Determine Tier
+    if total_discount_pct >= 20.0 and dmarc_secure and dlp_active:
+        tier = "PREFERRED_RISK"
+        tier_display = "Preferred Risk (Tier 1)"
+        decision = "APPROVED"
+        status_color = "#1e7e34"
+        summary = "Applicant verified with highest cyber security posture. Instant policy issuance approved at 25% Preferred Risk discount."
+    else:
+        tier = "CONDITIONAL_RISK"
+        tier_display = "Standard / Conditional Quote"
+        decision = "CONDITIONAL_APPROVAL"
+        status_color = "#e65100"
+        potential_savings = sum(
+            680 if "DMARC" in r["control"] else 340 if "DLP" in r["control"] else 255
+            for r in remediations
+        )
+        summary = f"Core eligibility verified. Applicant approved at standard rates with {total_discount_pct:.0f}% discount. Remediate flagged controls to unlock up to ${potential_savings:,.0f}/yr in further savings."
+
+    return {
+        "decision": decision,
+        "tier": tier,
+        "tier_display": tier_display,
+        "status_color": status_color,
+        "summary": summary,
+        "base_premium": base_annual_premium,
+        "total_discount_pct": total_discount_pct,
+        "discount_amount": total_discount_amt,
+        "final_annual_premium": final_annual_premium,
+        "final_monthly_premium": final_monthly_premium,
+        "coverage_limit": base_limit,
+        "deductible": deductible,
+        "credits": credits,
+        "remediations": remediations
+    }
