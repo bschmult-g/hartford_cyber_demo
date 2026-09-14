@@ -28,57 +28,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Chrome Browser Simulation Bar */
-.browser-bar {
-  background: #E5E7EB;
-  padding: 8px 16px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid #D1D5DB;
-  font-size: 13px;
-  color: #374151;
-}
-
-.browser-controls {
-  display: flex;
-  gap: 6px;
-}
-
-.browser-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-.dot-red { background: #EF4444; }
-.dot-yellow { background: #F59E0B; }
-.dot-green { background: #10B981; }
-
-.browser-address {
-  background: #FFFFFF;
-  border: 1px solid #CBD5E1;
-  border-radius: 16px;
-  padding: 4px 16px;
-  flex: 1;
-  max-width: 600px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: monospace;
-  font-size: 12px;
-}
-
-.browser-bookmarks {
-  background: #F3F4F6;
-  padding: 4px 16px;
-  display: flex;
-  gap: 16px;
-  border-bottom: 1px solid #E5E7EB;
-  font-size: 11px;
-  color: #4B5563;
-  overflow-x: auto;
-  white-space: nowrap;
-}
 
 /* Main Hartford Header */
 .hartford-header {
