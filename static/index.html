@@ -493,19 +493,19 @@
               </div>
               <div class="scan-step" id="scanStep1">
                 <div class="scan-spinner"></div>
-                <span>Validating Super Admin OAuth 2.0 Identity...</span>
+                <span>Validating Super Admin OAuth 2.0 Identity &amp; Domain...</span>
               </div>
               <div class="scan-step" id="scanStep2">
                 <div class="scan-spinner"></div>
-                <span>Querying Google Admin SDK Reports API (accounts:is_2sv_enforced)...</span>
+                <span>Querying Google Admin SDK (2SV, Headcount &amp; Super Admin Count)...</span>
               </div>
               <div class="scan-step" id="scanStep3">
                 <div class="scan-spinner"></div>
-                <span>Resolving Live DNS Posture (SPF &amp; DMARC for <span id="scanDomainName">foremycorp.com</span>)...</span>
+                <span>Resolving Live DNS Posture (SPF, DMARC, DKIM &amp; Google MX Gateway)...</span>
               </div>
               <div class="scan-step" id="scanStep4">
                 <div class="scan-spinner"></div>
-                <span>Verifying Cloud DLP inspection and Google Vault policies...</span>
+                <span>Inspecting Device Fleet Encryption, DLP Rules &amp; Google Vault Retention...</span>
               </div>
             </div>
 
@@ -546,13 +546,13 @@
                     <span style="font-size:18px;">📋</span>
                     <div>
                       <h4 style="font-size:14px; font-weight:800; color:#1E293B; margin:0;">Verified Security Findings &amp; Underwriting Explanation</h4>
-                      <span style="font-size:11px; color:#64748B;">Telemetry evaluated for <strong id="findingsDomainName">applicant domain</strong></span>
+                      <span style="font-size:11px; color:#64748B;">Live Workspace telemetry &amp; DNS evaluated for <strong id="findingsDomainName">applicant domain</strong></span>
                     </div>
                   </div>
                   <span class="findings-source-badge" id="findingsSourceBadge">Live Google Telemetry</span>
                 </div>
 
-                <!-- 4 Controls Grid -->
+                <!-- 8 Controls Grid -->
                 <div class="findings-grid">
 
                   <!-- 1. MFA / 2SV -->
@@ -589,7 +589,58 @@
                     <div class="finding-impact" id="impactDmarc">-</div>
                   </div>
 
-                  <!-- 3. Cloud DLP -->
+                  <!-- 3. Super Admin Count (Least Privilege) -->
+                  <div class="finding-card" id="cardAdmin">
+                    <div class="finding-card-header">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="finding-card-icon">👥</span>
+                        <strong class="finding-card-title">Super Admin Least-Privilege</strong>
+                      </div>
+                      <span class="finding-pill" id="pillAdmin">VERIFYING</span>
+                    </div>
+                    <div class="finding-observed">
+                      <span class="label">Observed:</span>
+                      <span class="value" id="valAdmin">-</span>
+                    </div>
+                    <div class="finding-explanation" id="explAdmin">-</div>
+                    <div class="finding-impact" id="impactAdmin">-</div>
+                  </div>
+
+                  <!-- 4. Device Fleet & Full Disk Encryption -->
+                  <div class="finding-card" id="cardDevice">
+                    <div class="finding-card-header">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="finding-card-icon">💻</span>
+                        <strong class="finding-card-title">Device Fleet &amp; Encryption</strong>
+                      </div>
+                      <span class="finding-pill" id="pillDevice">VERIFYING</span>
+                    </div>
+                    <div class="finding-observed">
+                      <span class="label">Observed:</span>
+                      <span class="value" id="valDevice">-</span>
+                    </div>
+                    <div class="finding-explanation" id="explDevice">-</div>
+                    <div class="finding-impact" id="impactDevice">-</div>
+                  </div>
+
+                  <!-- 5. Cloud Mail Gateway & DKIM -->
+                  <div class="finding-card" id="cardMx">
+                    <div class="finding-card-header">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="finding-card-icon">🌐</span>
+                        <strong class="finding-card-title">Mail Gateway &amp; DKIM</strong>
+                      </div>
+                      <span class="finding-pill" id="pillMx">VERIFYING</span>
+                    </div>
+                    <div class="finding-observed">
+                      <span class="label">Observed:</span>
+                      <span class="value" id="valMx">-</span>
+                    </div>
+                    <div class="finding-explanation" id="explMx">-</div>
+                    <div class="finding-impact" id="impactMx">-</div>
+                  </div>
+
+                  <!-- 6. Cloud DLP -->
                   <div class="finding-card" id="cardDlp">
                     <div class="finding-card-header">
                       <div style="display:flex; align-items:center; gap:6px;">
@@ -606,7 +657,7 @@
                     <div class="finding-impact" id="impactDlp">-</div>
                   </div>
 
-                  <!-- 4. Google Vault -->
+                  <!-- 7. Google Vault Retention -->
                   <div class="finding-card" id="cardVault">
                     <div class="finding-card-header">
                       <div style="display:flex; align-items:center; gap:6px;">
@@ -621,6 +672,23 @@
                     </div>
                     <div class="finding-explanation" id="explVault">-</div>
                     <div class="finding-impact" id="impactVault">-</div>
+                  </div>
+
+                  <!-- 8. Headcount & Offboarding Hygiene -->
+                  <div class="finding-card" id="cardUsers">
+                    <div class="finding-card-header">
+                      <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="finding-card-icon">👤</span>
+                        <strong class="finding-card-title">Headcount &amp; Offboarding</strong>
+                      </div>
+                      <span class="finding-pill" id="pillUsers">VERIFYING</span>
+                    </div>
+                    <div class="finding-observed">
+                      <span class="label">Observed:</span>
+                      <span class="value" id="valUsers">-</span>
+                    </div>
+                    <div class="finding-explanation" id="explUsers">-</div>
+                    <div class="finding-impact" id="impactUsers">-</div>
                   </div>
 
                 </div>

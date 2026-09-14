@@ -118,6 +118,56 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
             "action": "Set default retention and audit policies for email and Drive storage."
         })
 
+    # 5. Super Admin Least-Privilege Governance
+    super_admins = telemetry.get("super_admin_count", 1)
+    if 1 <= super_admins <= 3:
+        admin_credit_pct = 2.0
+        admin_credit_amt = base_annual_premium * (admin_credit_pct / 100.0)
+        credits.append({
+            "name": "Super Admin Least-Privilege Architecture",
+            "description": f"Verified {super_admins} dedicated Super Admins (minimizes extortion blast radius)",
+            "pct": admin_credit_pct,
+            "amount": admin_credit_amt
+        })
+    elif super_admins > 6:
+        remediations.append({
+            "control": f"Remediate Super Admin Sprawl ({super_admins} Admins Detected)",
+            "impact": "Reduces catastrophic ransomware takeover risk",
+            "action": "Reduce Super Admin role grants to <= 3 dedicated accounts. Use delegated admin roles for day-to-day operations."
+        })
+
+    # 6. Device Fleet & Endpoint Encryption
+    dev_count = telemetry.get("device_count", 0)
+    dev_enc_pct = telemetry.get("device_encryption_pct", 100.0)
+    screen_lock = telemetry.get("screen_lock_enforced", True)
+    if dev_count > 0 and dev_enc_pct >= 90.0 and screen_lock:
+        dev_credit_pct = 2.0
+        dev_credit_amt = base_annual_premium * (dev_credit_pct / 100.0)
+        credits.append({
+            "name": "Endpoint Fleet Encryption & Screen Lock",
+            "description": f"Verified {dev_count} enrolled devices with {dev_enc_pct:.0f}% disk encryption",
+            "pct": dev_credit_pct,
+            "amount": dev_credit_amt
+        })
+    elif dev_count > 0 and dev_enc_pct < 80.0:
+        remediations.append({
+            "control": "Enforce Device Fleet Disk Encryption",
+            "impact": "Eliminates lost-hardware data breach sublimits",
+            "action": "Enable BitLocker / FileVault enforcement in Google Endpoint Management."
+        })
+
+    # 7. DKIM Cryptographic Signature
+    dkim_present = telemetry.get("dkim_record_present", False)
+    if dkim_present:
+        dkim_credit_pct = 1.0
+        dkim_credit_amt = base_annual_premium * (dkim_credit_pct / 100.0)
+        credits.append({
+            "name": "DKIM Cryptographic Email Signature",
+            "description": "Outbound email authentication stops sender tampering",
+            "pct": dkim_credit_pct,
+            "amount": dkim_credit_amt
+        })
+
     # Calculate Totals
     total_discount_pct = sum(c["pct"] for c in credits)
     total_discount_amt = sum(c["amount"] for c in credits)

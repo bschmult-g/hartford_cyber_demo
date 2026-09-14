@@ -44,7 +44,9 @@ SCOPES = [
     "profile",
     "https://www.googleapis.com/auth/admin.reports.audit.readonly",
     "https://www.googleapis.com/auth/admin.reports.usage.readonly",
+    "https://www.googleapis.com/auth/admin.directory.user.readonly",
     "https://www.googleapis.com/auth/admin.directory.user.security",
+    "https://www.googleapis.com/auth/admin.directory.device.mobile.readonly",
     "https://www.googleapis.com/auth/ediscovery.readonly"
 ]
 
