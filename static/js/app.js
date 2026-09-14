@@ -11,7 +11,25 @@ let activePreset = null;
 // Initialize on load
 document.addEventListener("DOMContentLoaded", () => {
   syncDomainFromEmail();
+  checkRedirectSession();
 });
+
+async function checkRedirectSession() {
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("session_id");
+  if (sessionId) {
+    try {
+      const resp = await fetch(`/api/session/${sessionId}`);
+      if (resp.ok) {
+        const data = await resp.json();
+        navigateToStep(5);
+        renderQuoteResult(data);
+      }
+    } catch (e) {
+      console.error("Failed to load redirect session:", e);
+    }
+  }
+}
 
 function startQuoteFlow() {
   navigateToStep(1);
@@ -111,23 +129,13 @@ function syncDomainFromEmail() {
   }
 }
 
-/* ==================== OAUTH & TELEMETRY FLOW ==================== */
+/* ==================== REAL GOOGLE OAUTH & TELEMETRY FLOW ==================== */
 
-function openOAuthModal() {
+let oauthPopup = null;
+
+async function triggerGoogleOAuth() {
   syncDomainFromEmail();
-  const modal = document.getElementById("oauthModal");
-  modal.classList.add("active");
-}
 
-function closeOAuthModal() {
-  const modal = document.getElementById("oauthModal");
-  modal.classList.remove("active");
-}
-
-async function confirmOAuthConsent() {
-  closeOAuthModal();
-
-  // Show scanning state
   const scanBox = document.getElementById("scanProgressBox");
   const quoteCard = document.getElementById("quoteResultCard");
   const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
@@ -144,46 +152,86 @@ async function confirmOAuthConsent() {
   // Reset steps
   [s1, s2, s3, s4].forEach(s => {
     s.classList.remove("done");
-    s.querySelector(".scan-spinner")?.style.setProperty("display", "inline-block");
+    const sp = s.querySelector(".scan-spinner");
+    if (sp) sp.style.display = "inline-block";
   });
 
-  // Step 1: OAuth Identity
-  await sleep(700);
-  markStepDone(s1, "OAuth 2.0 Super Admin Identity Established (Ephemerally Scoped)");
+  s1.querySelector("span").textContent = "Requesting Google OAuth 2.0 authorization URL...";
+  s2.querySelector("span").textContent = "Awaiting Super Admin consent on accounts.google.com...";
+  s3.querySelector("span").textContent = "Querying live Google Workspace Admin SDK & Directory APIs...";
+  s4.querySelector("span").textContent = "Resolving live DNS (SPF/DMARC) & computing actuarial quote...";
 
-  // Step 2: MFA Enforcement
-  await sleep(800);
-  markStepDone(s2, "Google Admin Reports API: 2-Step Verification Enforced");
-
-  // Step 3: Live DNS Check
-  await sleep(800);
-  markStepDone(s3, `Live DNS Verified: SPF Active, DMARC Configured for ${currentDomain}`);
-
-  // Step 4: DLP & Vault
-  await sleep(700);
-  markStepDone(s4, "Cloud DLP Inspection & Google Vault Audit Retention Confirmed");
-
-  // Call Backend Microservice
   try {
-    const payload = {
-      domain: currentDomain,
-      organization_name: currentOrgName,
-      profile_override: activePreset
+    const urlResp = await fetch(`/api/auth/google/url?domain=${encodeURIComponent(currentDomain)}&organization_name=${encodeURIComponent(currentOrgName)}`);
+    const authData = await urlResp.json();
+    
+    if (!authData.auth_url) {
+      throw new Error(authData.detail || "Failed to generate Google OAuth URL");
+    }
+
+    markStepDone(s1, "Google OAuth 2.0 Endpoints Initialized");
+
+    // Open real Google OAuth in a popup window
+    const width = 540;
+    const height = 680;
+    const left = Math.max(0, (window.innerWidth - width) / 2 + window.screenX);
+    const top = Math.max(0, (window.innerHeight - height) / 2 + window.screenY);
+
+    oauthPopup = window.open(
+      authData.auth_url,
+      "google_oauth_beacon",
+      `width=${width},height=${height},top=${top},left=${left},status=no,resizable=yes`
+    );
+
+    if (!oauthPopup || oauthPopup.closed || typeof oauthPopup.closed === "undefined") {
+      // Popup was blocked by browser; fallback to direct navigation
+      console.warn("Popup blocked. Redirecting current window directly to Google OAuth.");
+      window.location.href = authData.auth_url;
+      return;
+    }
+
+    // Set up message listener for the popup response
+    const handleAuthMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data && event.data.type === "BEACON_OAUTH_SUCCESS") {
+        window.removeEventListener("message", handleAuthMessage);
+        markStepDone(s2, "Super Admin Identity Authenticated via Google");
+        markStepDone(s3, "Google Workspace Security Posture Successfully Extracted");
+        markStepDone(s4, "Live DNS Verified & Cryptographic Attestation Issued");
+
+        setTimeout(() => {
+          scanBox.classList.remove("active");
+          renderQuoteResult(event.data.payload);
+        }, 600);
+      } else if (event.data && event.data.type === "BEACON_OAUTH_ERROR") {
+        window.removeEventListener("message", handleAuthMessage);
+        scanBox.classList.remove("active");
+        verifyBtn.style.display = "flex";
+        alert("Google Verification Error: " + (event.data.error || "Authentication failed"));
+      }
     };
 
-    const resp = await fetch("/api/underwrite", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    window.addEventListener("message", handleAuthMessage);
 
-    const data = await resp.json();
-    renderQuoteResult(data);
+    // Watch for unexpected popup closure
+    const popupCheckTimer = setInterval(() => {
+      if (oauthPopup && oauthPopup.closed) {
+        clearInterval(popupCheckTimer);
+        setTimeout(() => {
+          if (scanBox.classList.contains("active") && !quoteCard.classList.contains("active")) {
+            scanBox.classList.remove("active");
+            verifyBtn.style.display = "flex";
+          }
+        }, 1500);
+      }
+    }, 1000);
+
   } catch (err) {
-    console.error("Underwriting failed:", err);
-    alert("Underwriting error occurred. Please check console or try again.");
-  } finally {
+    console.error("OAuth init failed:", err);
     scanBox.classList.remove("active");
+    verifyBtn.style.display = "flex";
+    alert("Could not start Google Verification: " + err.message);
   }
 }
 
@@ -370,4 +418,56 @@ function escapeHtml(str) {
   return str.replace(/[&<>'"]/g, 
     tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
   );
+}
+
+/* ==================== CUSTOMER TRANSPARENCY MODAL CONTROLLER ==================== */
+
+function openTransparencyModal(defaultTab = 'tabApis') {
+  const modal = document.getElementById("transparencyModal");
+  if (modal) {
+    modal.style.display = "flex";
+    switchTransparencyTab(defaultTab);
+  }
+}
+
+function closeTransparencyModal() {
+  const modal = document.getElementById("transparencyModal");
+  if (modal) {
+    modal.style.display = "none";
+  }
+}
+
+function handleModalOverlayClick(event) {
+  if (event.target && event.target.id === "transparencyModal") {
+    closeTransparencyModal();
+  }
+}
+
+function switchTransparencyTab(tabId) {
+  const tabBtns = [
+    { id: 'tabApis', btnId: 'btnTabApis' },
+    { id: 'tabPrivacy', btnId: 'btnTabPrivacy' },
+    { id: 'tabCrypto', btnId: 'btnTabCrypto' }
+  ];
+
+  tabBtns.forEach(t => {
+    const tabEl = document.getElementById(t.id);
+    const btnEl = document.getElementById(t.btnId);
+
+    if (tabEl) {
+      if (t.id === tabId) {
+        tabEl.classList.add("active");
+      } else {
+        tabEl.classList.remove("active");
+      }
+    }
+
+    if (btnEl) {
+      if (t.id === tabId) {
+        btnEl.classList.add("active");
+      } else {
+        btnEl.classList.remove("active");
+      }
+    }
+  });
 }

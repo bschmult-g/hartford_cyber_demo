@@ -16,6 +16,16 @@
       <img src="/static/img/hartford_logo.png" alt="The Hartford Logo">
       <div class="header-title" id="headerSubTitle">Small Business Insurance Quote</div>
     </div>
+
+    <!-- Direct Header Transparency Tab / Button (Accessible Across All Steps) -->
+    <div class="header-center-action">
+      <button type="button" class="btn-header-guide" onclick="openTransparencyModal('tabApis')" title="View what Google APIs verify in your environment">
+        <span class="guide-icon">🛡️</span>
+        <span class="guide-text">Customer Security &amp; API Guide</span>
+        <span class="guide-badge">Read-Only Scopes</span>
+      </button>
+    </div>
+
     <div class="header-support">
       <div>Need Help? Call The Hartford</div>
       <div class="header-phone">1-800-581-3703</div>
@@ -53,7 +63,12 @@
           <div class="hero-content">
             <h1 class="hero-title">Protect Your Business With Cyber Insurance</h1>
             <p class="hero-desc">Find coverage that helps your business recover quickly and confidently. Get a fast and free quote from The Hartford today.</p>
-            <button class="btn-quote-today" onclick="startQuoteFlow()">Quote Today</button>
+            <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:20px;">
+              <button class="btn-quote-today" onclick="startQuoteFlow()">Quote Today</button>
+              <button type="button" class="btn-hero-guide" onclick="openTransparencyModal('tabApis')">
+                <span>🛡️</span> What Do Our APIs Verify?
+              </button>
+            </div>
           </div>
           <div class="hero-image">
             <svg viewBox="0 0 400 320" width="360" height="280">
@@ -74,6 +89,18 @@
               <rect x="100" y="85" width="20" height="110" rx="4" fill="#B5838D"/>
             </svg>
           </div>
+        </div>
+
+        <!-- Customer Trust & Technical Verification Callout Banner -->
+        <div class="landing-transparency-card" onclick="openTransparencyModal('tabApis')">
+          <div class="landing-card-left">
+            <span class="landing-card-tag">🔒 Zero-Retention Cloud Underwriting</span>
+            <h4>What does our automated Google Workspace inspection verify?</h4>
+            <p>Underwriters verify 2-Step Verification, DMARC phishing defense, Cloud DLP, and Vault retention via strictly read-only APIs. No employee emails, files, or credentials are ever accessed or stored.</p>
+          </div>
+          <button type="button" class="btn-card-transparency">
+            Explore API Specs &amp; Privacy Guarantees →
+          </button>
         </div>
       </div>
     </section>
@@ -443,8 +470,18 @@
               </div>
             </div>
 
+            <!-- Transparency Link for Customers & IT Admins -->
+            <div class="step5-transparency-banner" onclick="openTransparencyModal('tabApis')">
+              <div style="font-size:22px;">🛡️</div>
+              <div style="text-align:left; flex:1;">
+                <strong style="color:#1E3A8A; font-size:13px; display:block;">Customer &amp; IT Admin Transparency Guide</strong>
+                <span style="font-size:11px; color:#475569;">Detailed breakdown of Google APIs queried, read-only permissions, and what is never accessed.</span>
+              </div>
+              <span class="btn-transparency-pill" style="font-size:11px;">View Guide →</span>
+            </div>
+
             <!-- Auto-Verify Action Button -->
-            <button class="btn-google-verify" id="btnTriggerGoogleVerify" onclick="openOAuthModal()">
+            <button class="btn-google-verify" id="btnTriggerGoogleVerify" onclick="triggerGoogleOAuth()">
               <img src="/static/img/google_logo.svg" alt="Google" width="20">
               <span>Auto-Verify Security Posture</span>
             </button>
@@ -507,6 +544,18 @@
                 Bind Policy &amp; Download Binder
               </button>
 
+              <!-- Customer & IT Audit Transparency Callout -->
+              <div class="quote-guide-callout" onclick="openTransparencyModal('tabApis')">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:20px;">🛡️</span>
+                  <div>
+                    <strong style="font-size:12px; color:#0F766E; display:block;">Customer Questions: What Did Our APIs Just Verify?</strong>
+                    <span style="font-size:11px; color:#475569;">See full technical breakdown of the 4 Google Workspace APIs inspected and zero data retention proof.</span>
+                  </div>
+                </div>
+                <span style="color:#0F766E; font-size:12px; font-weight:800; white-space:nowrap;">Open Guide →</span>
+              </div>
+
               <!-- Zero-Retention Attestation Receipt -->
               <div class="attestation-receipt">
                 <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:bold; color:#0F766E;">
@@ -516,6 +565,11 @@
                 <div>Token: <span id="attestToken">hig_gcp_attest_7f8a9...</span></div>
                 <div>SHA-256 Fingerprint: <span id="attestHash">b43c8d19...</span></div>
                 <div style="margin-top:4px; color:#64748B;">No employee records or raw IT logs retained. Ephemerally processed under SOC2/ISO 27001 zero-retention rules.</div>
+                <div style="margin-top:6px; text-align:right;">
+                  <a href="javascript:void(0)" onclick="openTransparencyModal('tabCrypto')" style="color:#0F766E; font-size:11px; font-weight:700; text-decoration:underline;">
+                    How Zero-Retention Cryptography Works →
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -528,54 +582,17 @@
 
   </main>
 
-  <!-- ==================== GOOGLE SUPER ADMIN OAUTH MODAL ==================== -->
-  <div class="modal-overlay" id="oauthModal">
-    <div class="oauth-modal">
-      <div class="oauth-logo-row">
-        <img src="/static/img/google_logo.svg" alt="Google" width="32">
-        <span style="font-size:12px; color:#6B7280; font-weight:600;">Sign in with Google</span>
-      </div>
-
-      <h3 style="font-size:20px; font-weight:700; color:#202124; margin-bottom:8px;">
-        The Hartford Cyber Underwriting
-      </h3>
-      <p style="font-size:13px; color:#5F6368;">
-        The Hartford wants to access read-only security telemetry for domain <strong id="oauthModalDomain">foremycorp.com</strong> to verify your insurance eligibility:
-      </p>
-
-      <div class="oauth-scopes">
-        <div class="scope-item">
-          <span>✔️</span>
-          <div>
-            <strong>Google Admin SDK Reports API:</strong> Read 2-Step Verification (2SV) enforcement status and enrollment percentages.
-          </div>
-        </div>
-        <div class="scope-item">
-          <span>✔️</span>
-          <div>
-            <strong>Google Workspace Policy &amp; Rules API:</strong> Verify active Data Loss Prevention (DLP) and retention rules.
-          </div>
-        </div>
-        <div class="scope-item">
-          <span>✔️</span>
-          <div>
-            <strong>Zero-Retention Ephemeral Access:</strong> HIG processes this in memory to calculate rating, then immediately purges raw telemetry.
-          </div>
-        </div>
-      </div>
-
-      <div class="oauth-actions">
-        <button class="btn-oauth-cancel" onclick="closeOAuthModal()">Cancel</button>
-        <button class="btn-oauth-allow" onclick="confirmOAuthConsent()">Allow &amp; Connect</button>
-      </div>
-    </div>
-  </div>
+  <!-- Real Google OAuth 2.0 Flow active via Google Auth Platform -->
 
   <!-- ==================== FLOATING DEMO CONTROLS ==================== -->
   <div class="demo-floating-bar">
+    <button class="btn-studio-toggle btn-guide-floating" onclick="openTransparencyModal('tabApis')" title="Customer & IT Admin Technical Guide">
+      <span>🛡️</span>
+      <span>What Do APIs Verify?</span>
+    </button>
     <button class="btn-studio-toggle" onclick="toggleStudioDrawer()">
       <span>⚙️</span>
-      <span>Underwriter Telemetry &amp; What-If Studio</span>
+      <span>Underwriter Studio &amp; What-If</span>
     </button>
   </div>
 
@@ -591,6 +608,19 @@
 
     <div class="studio-body">
 
+      <!-- SECTION 0: Customer Security & Transparency Guide -->
+      <div class="studio-section" style="background:#EFF6FF; border:1px solid #BFDBFE; border-radius:8px; padding:12px; margin-bottom:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong style="color:#1E3A8A; font-size:12px; display:block;">🛡️ Customer Transparency Guide</strong>
+            <span style="font-size:11px; color:#475569;">Breakdown of read-only scopes &amp; privacy guarantees.</span>
+          </div>
+          <button class="btn-next" style="padding:6px 12px; font-size:11px; background:#1D4ED8; margin:0;" onclick="openTransparencyModal('tabApis')">
+            Open Guide
+          </button>
+        </div>
+      </div>
+
       <!-- SECTION 1: Canned Scenarios -->
       <div class="studio-section">
         <div class="studio-title">Quick Demo Scenarios</div>
@@ -598,19 +628,19 @@
           <button class="radio-option" style="text-align:left;" onclick="loadDemoScenario('foremycorp.com')">
             <div>
               <strong style="color:#166534;">🟢 Foremy Corp (Preferred Risk)</strong>
-              <div style="font-size:11px; color:#6B7280;">100% MFA, DMARC reject, DLP active $\rightarrow$ 25% Discount ($6,375/yr)</div>
+              <div style="font-size:11px; color:#6B7280;">100% MFA, DMARC reject, DLP active → 25% Discount ($6,375/yr)</div>
             </div>
           </button>
           <button class="radio-option" style="text-align:left;" onclick="loadDemoScenario('partialcompliance.com')">
             <div>
               <strong style="color:#B45309;">🟡 Partial Compliance SMB</strong>
-              <div style="font-size:11px; color:#6B7280;">MFA enabled, but DMARC is 'none' &amp; no DLP $\rightarrow$ Conditional ($7,650/yr)</div>
+              <div style="font-size:11px; color:#6B7280;">MFA enabled, but DMARC is 'none' &amp; no DLP → Conditional ($7,650/yr)</div>
             </div>
           </button>
           <button class="radio-option" style="text-align:left;" onclick="loadDemoScenario('vulnerableretail.com')">
             <div>
               <strong style="color:#991B1B;">🔴 Vulnerable Retailer</strong>
-              <div style="font-size:11px; color:#6B7280;">No MFA, missing DMARC $\rightarrow$ Declined (High Ransomware Risk)</div>
+              <div style="font-size:11px; color:#6B7280;">No MFA, missing DMARC → Declined (High Ransomware Risk)</div>
             </div>
           </button>
         </div>
@@ -686,6 +716,248 @@
 
     </div>
   </aside>
+
+  <!-- ==================== CUSTOMER API VERIFICATION & PRIVACY TRANSPARENCY MODAL ==================== -->
+  <div class="modal-overlay" id="transparencyModal" style="display:none;" onclick="handleModalOverlayClick(event)">
+    <div class="transparency-modal" onclick="event.stopPropagation()">
+      <div class="transparency-header">
+        <div>
+          <h3>🛡️ Technical Verification &amp; Privacy Architecture</h3>
+          <p>How Project Beacon verifies small business cyber hygiene using ephemeral, read-only telemetry.</p>
+        </div>
+        <button class="btn-close-modal" onclick="closeTransparencyModal()">✕</button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="transparency-nav">
+        <button class="transparency-tab-btn active" id="btnTabApis" onclick="switchTransparencyTab('tabApis')">
+          <span>🔍</span> What Each API Verifies
+        </button>
+        <button class="transparency-tab-btn" id="btnTabPrivacy" onclick="switchTransparencyTab('tabPrivacy')">
+          <span>🚫</span> What Is NEVER Accessed
+        </button>
+        <button class="transparency-tab-btn" id="btnTabCrypto" onclick="switchTransparencyTab('tabCrypto')">
+          <span>🔐</span> Zero-Retention Cryptography
+        </button>
+      </div>
+
+      <div class="transparency-body">
+
+        <!-- TAB 1: WHAT EACH API VERIFIES -->
+        <div class="transparency-tab-content active" id="tabApis">
+          <div style="margin-bottom:16px;">
+            <p style="font-size:13px; color:#475569;">
+              Instead of an applicant spending 2 weeks filling out a 45-question technical questionnaire, The Hartford queries <strong>4 specific, read-only telemetry signals</strong> directly from the customer's Google tenant:
+            </p>
+          </div>
+
+          <div class="api-verif-grid">
+
+            <!-- Control 1: MFA -->
+            <div class="api-verif-card">
+              <div class="api-card-header">
+                <div class="api-card-title">
+                  <span>🔒</span> Multi-Factor Auth (2SV)
+                </div>
+                <span class="api-badge api-badge-blue">Google Admin SDK</span>
+              </div>
+              <div class="api-card-meta">Scope: admin.reports.usage.readonly &amp; admin.directory.user.security</div>
+              <div class="api-card-desc">
+                <strong>What We Verify:</strong>
+                <ul style="padding-left:18px; margin-top:4px;">
+                  <li>Organization-wide 2SV enforcement policy</li>
+                  <li>% of employee accounts with 2SV active</li>
+                  <li>Authentication method tiers (FIDO2 Keys vs. TOTP vs. SMS)</li>
+                </ul>
+              </div>
+              <div class="api-card-why">
+                <strong>Actuarial Rationale:</strong> Compromised credentials cause 80%+ of ransomware intrusions. Verified org-wide MFA unlocks eligibility and a <strong>10% premium discount</strong>.
+              </div>
+            </div>
+
+            <!-- Control 2: DNS SPF/DMARC -->
+            <div class="api-verif-card">
+              <div class="api-card-header">
+                <div class="api-card-title">
+                  <span>✉️</span> Email Spoofing Defense
+                </div>
+                <span class="api-badge api-badge-green">Live DNS (Public)</span>
+              </div>
+              <div class="api-card-meta">Protocol: DNS TXT Query (dnspython &amp; Google DNS HTTPS)</div>
+              <div class="api-card-desc">
+                <strong>What We Verify:</strong>
+                <ul style="padding-left:18px; margin-top:4px;">
+                  <li>Valid SPF record authorizing outbound mail servers</li>
+                  <li>Strict DMARC policy (<code>p=reject</code> or <code>p=quarantine</code>) at <code>_dmarc.&lt;domain&gt;</code></li>
+                  <li>DKIM cryptographic selector presence</li>
+                </ul>
+              </div>
+              <div class="api-card-why">
+                <strong>Actuarial Rationale:</strong> Business Email Compromise (BEC) and invoice wire fraud cost SMBs $2.9B annually. Strict DMARC eliminates spoofing and saves <strong>8% ($680/yr)</strong>.
+              </div>
+            </div>
+
+            <!-- Control 3: DLP -->
+            <div class="api-verif-card">
+              <div class="api-card-header">
+                <div class="api-card-title">
+                  <span>🛡️</span> Data Loss Prevention (DLP)
+                </div>
+                <span class="api-badge api-badge-purple">Workspace Policy API</span>
+              </div>
+              <div class="api-card-meta">Scope: admin.reports.audit.readonly</div>
+              <div class="api-card-desc">
+                <strong>What We Verify:</strong>
+                <ul style="padding-left:18px; margin-top:4px;">
+                  <li>Active DLP inspection rules monitoring Drive &amp; Gmail</li>
+                  <li>Detection coverage for credit cards, SSNs, and confidential customer records</li>
+                </ul>
+              </div>
+              <div class="api-card-why">
+                <strong>Actuarial Rationale:</strong> Automated inspection of sensitive data prevents catastrophic exfiltration breaches, saving <strong>4% ($340/yr)</strong>.
+              </div>
+            </div>
+
+            <!-- Control 4: Vault -->
+            <div class="api-verif-card">
+              <div class="api-card-header">
+                <div class="api-card-title">
+                  <span>📦</span> Audit Retention &amp; Vault
+                </div>
+                <span class="api-badge api-badge-amber">Google Vault API</span>
+              </div>
+              <div class="api-card-meta">Scope: ediscovery.readonly</div>
+              <div class="api-card-desc">
+                <strong>What We Verify:</strong>
+                <ul style="padding-left:18px; margin-top:4px;">
+                  <li>Default retention rules established for email and Drive</li>
+                  <li>Tamper-evident legal holds &amp; immutable audit logging status</li>
+                </ul>
+              </div>
+              <div class="api-card-why">
+                <strong>Actuarial Rationale:</strong> Forensic investigation costs average $250K+ per incident. Guaranteed audit logs allow rapid incident response, saving <strong>3% ($255/yr)</strong>.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TAB 2: WHAT IS NEVER ACCESSED -->
+        <div class="transparency-tab-content" id="tabPrivacy">
+          <div class="forbidden-banner">
+            <div class="forbidden-title">
+              <span>🚫</span> Strict Customer Privacy &amp; Data Isolation Guarantee
+            </div>
+            <p style="font-size:12px; color:#7F1D1D; line-height:1.45;">
+              The Hartford never accesses personal files, communications, or sensitive business records. The OAuth connection is strictly limited to metadata and security posture flags.
+            </p>
+          </div>
+
+          <div class="never-list">
+            <div class="never-item">
+              <span class="never-icon-red">✕</span>
+              <div>
+                <div class="never-title">We NEVER read or access Emails, Chats, or Calendar entries</div>
+                <div class="never-desc">No message bodies, subject lines, attachments, contact lists, or recipient addresses are ever viewed or fetched.</div>
+              </div>
+            </div>
+
+            <div class="never-item">
+              <span class="never-icon-red">✕</span>
+              <div>
+                <div class="never-title">We NEVER access Google Drive files, documents, or spreadsheets</div>
+                <div class="never-desc">We only confirm that automated security scanning rules are turned on. Your actual files remain 100% private.</div>
+              </div>
+            </div>
+
+            <div class="never-item">
+              <span class="never-icon-red">✕</span>
+              <div>
+                <div class="never-title">We NEVER see or store Passwords, Secret Keys, or Recovery Codes</div>
+                <div class="never-desc">Google only provides an anonymous boolean verification flag (e.g., <code>isEnforcedIn2Sv = true</code>).</div>
+              </div>
+            </div>
+
+            <div class="never-item">
+              <span class="never-icon-red">✕</span>
+              <div>
+                <div class="never-title">We NEVER retain employee rosters or IT configuration files</div>
+                <div class="never-desc">All telemetry is processed in volatile server memory (RAM) and immediately discarded. Zero customer data is saved to disk or database.</div>
+              </div>
+            </div>
+
+            <div class="never-item">
+              <span class="never-icon-red">✕</span>
+              <div>
+                <div class="never-title">We CANNOT modify, change, or delete any customer settings</div>
+                <div class="never-desc">All requested OAuth scopes are explicitly restricted to <code>.readonly</code> and <code>.user.security</code>. Write or admin actions are cryptographically impossible.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: ZERO-RETENTION CRYPTOGRAPHY -->
+        <div class="transparency-tab-content" id="tabCrypto">
+          <div style="margin-bottom:14px;">
+            <h4 style="font-size:15px; font-weight:700; color:#0F172A; margin-bottom:4px;">How Zero-Retention Works (SOC 2 / ISO 27001)</h4>
+            <p style="font-size:12px; color:#475569;">
+              Project Beacon is engineered around a strict <strong>Ephemeral Lifecycle Policy</strong>. Instead of storing customer IT architectures, we produce an immutable cryptographic receipt:
+            </p>
+          </div>
+
+          <div class="zero-step-row">
+            <div class="zero-step-card">
+              <div class="zero-step-num">Step 1</div>
+              <div class="zero-step-name">Ephemeral Query</div>
+              <div class="zero-step-desc">Short-lived OAuth token reads 4 high-level posture booleans into RAM.</div>
+            </div>
+            <div style="font-size:18px; color:#94A3B8;">→</div>
+            <div class="zero-step-card">
+              <div class="zero-step-num">Step 2</div>
+              <div class="zero-step-name">Actuarial Rating</div>
+              <div class="zero-step-desc">Hartford rating engine computes tier discount (up to 25%) in &lt;200ms.</div>
+            </div>
+            <div style="font-size:18px; color:#94A3B8;">→</div>
+            <div class="zero-step-card">
+              <div class="zero-step-num">Step 3</div>
+              <div class="zero-step-name">SHA-256 Hashing</div>
+              <div class="zero-step-desc">Verified claims are hashed into a tamper-evident attestation receipt.</div>
+            </div>
+            <div style="font-size:18px; color:#94A3B8;">→</div>
+            <div class="zero-step-card">
+              <div class="zero-step-num">Step 4</div>
+              <div class="zero-step-name">Memory Discard</div>
+              <div class="zero-step-desc">Raw Google responses and tokens are purged. Zero data retained.</div>
+            </div>
+          </div>
+
+          <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:16px; font-size:12px;">
+            <div style="font-weight:700; color:#0F172A; margin-bottom:6px;">Sample Ephemeral Attestation Payload:</div>
+            <pre style="background:#0F172A; color:#38BDF8; padding:12px; border-radius:6px; font-size:11px; overflow-x:auto;">{
+  "verification_id": "BEACON-VERIF-A79B1C28",
+  "policy_attestation_token": "hig_gcp_attest_d4a7c4182b27db8079b285...",
+  "sha256_fingerprint": "d4a7c4182b27db8079b285d94d1d3bc85af5e5...",
+  "verified_claims": {
+    "domain": "acme-enterprise.com",
+    "mfa_verified": true,
+    "spf_verified": true,
+    "dmarc_policy": "reject",
+    "dlp_verified": true,
+    "vault_verified": true
+  },
+  "zero_retention_guarantee": {
+    "raw_configuration_stored": false,
+    "internal_logs_retained": false,
+    "ephemeral_lifecycle_policy": "DISCARD_ON_COMPLETION",
+    "compliance_standards": ["SOC2_TYPE_II", "ISO_27001", "HIG_CYBER_RATING_2026"]
+  }
+}</pre>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <script src="/static/js/app.js"></script>
 </body>
