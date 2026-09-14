@@ -44,6 +44,17 @@ body {
   display: flex;
   align-items: center;
   gap: 16px;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.header-brand:hover {
+  opacity: 0.88;
+}
+
+.header-brand:active {
+  transform: scale(0.99);
 }
 
 .header-brand img {

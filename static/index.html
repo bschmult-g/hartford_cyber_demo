@@ -12,7 +12,7 @@
 
   <!-- Main The Hartford Header -->
   <header class="hartford-header">
-    <div class="header-brand">
+    <div class="header-brand" onclick="navigateToHome()" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); navigateToHome(); }" style="cursor: pointer;" role="button" tabindex="0" title="Return to Home" aria-label="Return to Home">
       <img src="/static/img/hartford_logo.png" alt="The Hartford Logo">
       <div class="header-title" id="headerSubTitle">Small Business Insurance Quote</div>
     </div>

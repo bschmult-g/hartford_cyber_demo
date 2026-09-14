@@ -35,6 +35,17 @@ function startQuoteFlow() {
   navigateToStep(1);
 }
 
+function navigateToHome() {
+  if (typeof closeTransparencyModal === "function") {
+    closeTransparencyModal();
+  }
+  const drawer = document.getElementById("studioDrawer");
+  if (drawer && drawer.classList.contains("open")) {
+    drawer.classList.remove("open");
+  }
+  navigateToStep(0);
+}
+
 function navigateToStep(stepNumber) {
   currentStep = stepNumber;
 
