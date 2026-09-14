@@ -12,9 +12,9 @@ from pydantic import BaseModel
 class SecurityPosture(BaseModel):
     domain: str
     organization_name: str
-    mfa_enforced: bool
-    mfa_enrolled_pct: float
-    mfa_method_tier: str  # "FIDO2_SECURITY_KEY", "TOTP_AUTHENTICATOR", "SMS_WEAK"
+    mfa_enforced: Optional[bool] = None
+    mfa_enrolled_pct: Optional[float] = None
+    mfa_method_tier: str  # "FIDO2_SECURITY_KEY", "TOTP_AUTHENTICATOR", "SMS_WEAK", "UNVERIFIED"
     spf_record_present: bool
     spf_record_value: Optional[str] = None
     spf_valid: bool
@@ -24,17 +24,26 @@ class SecurityPosture(BaseModel):
     dkim_verified: bool
     dkim_record_present: bool
     mx_provider: str
-    super_admin_count: int
-    total_user_count: int
-    dormant_user_count: int
-    device_count: int
-    device_encryption_pct: float
-    screen_lock_enforced: bool
-    dlp_rules_active: bool
-    dlp_rule_count: int
-    vault_retention_active: bool
+    super_admin_count: Optional[int] = None
+    total_user_count: Optional[int] = None
+    dormant_user_count: Optional[int] = None
+    device_count: Optional[int] = None
+    device_encryption_pct: Optional[float] = None
+    screen_lock_enforced: Optional[bool] = None
+    dlp_rules_active: Optional[bool] = None
+    dlp_rule_count: int = 0
+    vault_retention_active: Optional[bool] = None
     data_source: str  # "live_google_workspace_api", "live_dns_hybrid", "preset_scenario_simulation"
     verified_at: str
+    account_role: Optional[str] = "STANDARD_USER"  # "SUPER_ADMIN", "DELEGATED_ADMIN", "STANDARD_USER"
+    verified_account: Optional[str] = None
+    delegation_verified: bool = False
+    directory_access_granted: bool = False
+    reports_access_granted: bool = False
+    endpoint_access_granted: bool = False
+    vault_access_granted: bool = False
+    dlp_access_granted: bool = False
+    api_audit_log: list[str] = []
 
 # Realistic canned profiles for instant stakeholder demos
 PRESET_PROFILES = {
@@ -218,22 +227,39 @@ async def fetch_live_google_workspace_telemetry(access_token: str, target_domain
     """
     Makes authentic, read-only REST calls to Google APIs using the OAuth access token.
     Zero-retention: Raw payloads are parsed in memory and discarded.
+    Zero faked fallbacks: If an endpoint returns 403 / ungranted, it is reported as unverified.
     """
     headers = {"Authorization": f"Bearer {access_token}"}
-    mfa_enforced = False
-    mfa_enrolled_pct = 0.0
-    mfa_method_tier = "UNKNOWN"
-    dlp_rules_active = False
-    dlp_rule_count = 0
-    vault_retention_active = False
+
+    # State tracking
     verified_email = None
     verified_domain = target_domain
-    super_admin_count = 1
-    total_user_count = 1
-    dormant_user_count = 0
-    device_count = 0
-    device_encryption_pct = 100.0
-    screen_lock_enforced = True
+    is_admin = False
+    is_delegated_admin = False
+    account_role = "STANDARD_USER"
+    delegation_verified = False
+
+    # Telemetry metrics initialized to None (unverified)
+    mfa_enforced: Optional[bool] = None
+    mfa_enrolled_pct: Optional[float] = None
+    mfa_method_tier: str = "UNVERIFIED"
+    super_admin_count: Optional[int] = None
+    total_user_count: Optional[int] = None
+    dormant_user_count: Optional[int] = None
+    device_count: Optional[int] = None
+    device_encryption_pct: Optional[float] = None
+    screen_lock_enforced: Optional[bool] = None
+    dlp_rules_active: Optional[bool] = None
+    dlp_rule_count: int = 0
+    vault_retention_active: Optional[bool] = None
+
+    # Access grants
+    directory_access_granted = False
+    reports_access_granted = False
+    endpoint_access_granted = False
+    vault_access_granted = False
+    dlp_access_granted = False
+
     api_audit_log = []
 
     async with httpx.AsyncClient(timeout=8.0) as client:
@@ -244,11 +270,13 @@ async def fetch_live_google_workspace_telemetry(access_token: str, target_domain
                 uinfo = userinfo_resp.json()
                 verified_email = uinfo.get("email")
                 verified_domain = uinfo.get("hd") or (verified_email.split("@")[-1] if verified_email else target_domain)
-                api_audit_log.append(f"OAuth Identity Verified: {verified_email} ({verified_domain})")
+                api_audit_log.append(f"OAuth Identity Handshake: {verified_email} ({verified_domain})")
+            else:
+                api_audit_log.append(f"Userinfo check failed: HTTP {userinfo_resp.status_code}")
         except Exception as e:
-            api_audit_log.append(f"Userinfo check notice: {str(e)}")
+            api_audit_log.append(f"Userinfo check error: {str(e)}")
 
-        # 2. Directory API - Check 2SV Status on Authenticated Admin
+        # 2. Directory API - Check Admin Role & 2SV Status on Authenticated Account
         if verified_email:
             try:
                 user_sec_resp = await client.get(
@@ -257,20 +285,40 @@ async def fetch_live_google_workspace_telemetry(access_token: str, target_domain
                 )
                 if user_sec_resp.status_code == 200:
                     udata = user_sec_resp.json()
-                    is_enforced = udata.get("isEnforcedIn2Sv", False)
-                    is_enrolled = udata.get("isEnrolledIn2Sv", False)
-                    mfa_enforced = is_enforced or is_enrolled
-                    mfa_enrolled_pct = 100.0 if is_enrolled else 0.0
-                    mfa_method_tier = "FIDO2_SECURITY_KEY" if is_enforced else ("TOTP_AUTHENTICATOR" if is_enrolled else "NONE")
-                    api_audit_log.append(f"Directory API: Admin 2SV Enforced={is_enforced}, Enrolled={is_enrolled}")
+                    is_admin = bool(udata.get("isAdmin", False))
+                    is_delegated_admin = bool(udata.get("isDelegatedAdmin", False))
+                    is_enforced = bool(udata.get("isEnforcedIn2Sv", False))
+                    is_enrolled = bool(udata.get("isEnrolledIn2Sv", False))
+
+                    if is_admin:
+                        account_role = "SUPER_ADMIN"
+                    elif is_delegated_admin:
+                        account_role = "DELEGATED_ADMIN"
+                    else:
+                        account_role = "STANDARD_USER"
+
+                    user_method = "FIDO2_SECURITY_KEY" if is_enforced else ("TOTP_AUTHENTICATOR" if is_enrolled else "NONE")
+                    api_audit_log.append(
+                        f"Directory API: Authenticated Account Role={account_role}, Personal 2SV Enforced={is_enforced}, Method={user_method}"
+                    )
+                elif user_sec_resp.status_code == 403:
+                    err_json = {}
+                    try:
+                        err_json = user_sec_resp.json().get("error", {})
+                    except Exception:
+                        pass
+                    err_msg = err_json.get("message", "Forbidden")
+                    account_role = "STANDARD_USER"
+                    api_audit_log.append(f"Directory API: 403 Forbidden ({err_msg}) - Standard user lacking Admin privilege")
                 else:
-                    api_audit_log.append(f"Directory API status: {user_sec_resp.status_code}")
+                    api_audit_log.append(f"Directory API user query returned HTTP {user_sec_resp.status_code}")
             except Exception as e:
                 api_audit_log.append(f"Directory API error: {str(e)}")
 
-        # 3. Admin Reports API - Customer Usage (Domain-wide 2SV statistics)
+        # 3. Admin Reports API - Domain-wide 2SV Statistics
         try:
             import datetime
+            reports_found = False
             for days_ago in [2, 3, 4]:
                 check_date = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days_ago)).strftime("%Y-%m-%d")
                 usage_resp = await client.get(
@@ -281,15 +329,27 @@ async def fetch_live_google_workspace_telemetry(access_token: str, target_domain
                     data = usage_resp.json()
                     reports = data.get("usageReports", [])
                     if reports:
+                        reports_found = True
+                        reports_access_granted = True
                         params = {p["name"]: p.get("intValue", p.get("boolValue")) for p in reports[0].get("parameters", [])}
                         if "accounts:is_2sv_enforced" in params:
                             mfa_enforced = bool(params["accounts:is_2sv_enforced"])
-                        total = int(params.get("accounts:num_users", 1) or 1)
-                        total_user_count = total
+                        total = int(params.get("accounts:num_users", 0) or 0)
                         enrolled = int(params.get("accounts:num_users_enrolled_in_2sv", 0) or 0)
-                        mfa_enrolled_pct = round((enrolled / total) * 100.0, 1)
-                        api_audit_log.append(f"Reports API: Org 2SV Enforced={mfa_enforced}, Enrolled={mfa_enrolled_pct}% ({enrolled}/{total})")
+                        if total > 0:
+                            mfa_enrolled_pct = round((enrolled / total) * 100.0, 1)
+                        else:
+                            mfa_enrolled_pct = 0.0
+                        mfa_method_tier = "FIDO2_SECURITY_KEY" if mfa_enforced else ("TOTP_AUTHENTICATOR" if mfa_enrolled_pct > 0 else "NONE")
+                        api_audit_log.append(f"Reports API: Real-time Org 2SV Enforced={mfa_enforced}, Enrolled={mfa_enrolled_pct}% ({enrolled}/{total} users)")
                         break
+                elif usage_resp.status_code == 403:
+                    reports_access_granted = False
+                    api_audit_log.append("Reports API: 403 Forbidden - Standard account lacks 'Reports' delegated admin privilege")
+                    break
+            if not reports_found and not reports_access_granted:
+                mfa_enforced = None
+                mfa_enrolled_pct = None
         except Exception as e:
             api_audit_log.append(f"Reports API notice: {str(e)}")
 
@@ -300,30 +360,34 @@ async def fetch_live_google_workspace_telemetry(access_token: str, target_domain
                 headers=headers
             )
             if users_resp.status_code == 200:
+                directory_access_granted = True
                 udata = users_resp.json()
                 u_list = udata.get("users", [])
-                if u_list:
-                    total_user_count = len(u_list)
-                    admins = [u for u in u_list if u.get("isAdmin") is True]
-                    super_admin_count = max(1, len(admins))
-                    
-                    # Calculate dormant accounts (>90 days inactive)
-                    import datetime
-                    now_utc = datetime.datetime.now(datetime.timezone.utc)
-                    for u in u_list:
-                        last_login = u.get("lastLoginTime")
-                        if last_login:
-                            try:
-                                dt = datetime.datetime.fromisoformat(last_login.replace("Z", "+00:00"))
-                                if (now_utc - dt).days > 90:
-                                    dormant_user_count += 1
-                            except Exception:
-                                pass
-                    api_audit_log.append(f"Directory API: Headcount={total_user_count}, SuperAdmins={super_admin_count}, Dormant={dormant_user_count}")
+                total_user_count = len(u_list)
+                admins = [u for u in u_list if u.get("isAdmin") is True]
+                super_admin_count = len(admins)
+                dormant_user_count = 0
+
+                import datetime
+                now_utc = datetime.datetime.now(datetime.timezone.utc)
+                for u in u_list:
+                    last_login = u.get("lastLoginTime")
+                    if last_login:
+                        try:
+                            dt = datetime.datetime.fromisoformat(last_login.replace("Z", "+00:00"))
+                            if (now_utc - dt).days > 90:
+                                dormant_user_count += 1
+                        except Exception:
+                            pass
+                api_audit_log.append(f"Directory API: Live Headcount={total_user_count}, SuperAdmins={super_admin_count}, Dormant={dormant_user_count}")
             elif users_resp.status_code == 403:
-                api_audit_log.append("Directory Users API: 403 (Scope not granted; estimated from admin)")
+                directory_access_granted = False
+                super_admin_count = None
+                total_user_count = None
+                dormant_user_count = None
+                api_audit_log.append("Directory Users API: 403 Forbidden - Standard account lacks 'Users' delegated admin privilege")
         except Exception as e:
-            api_audit_log.append(f"Directory Users API notice: {str(e)}")
+            api_audit_log.append(f"Directory Users API error: {str(e)}")
 
         # 5. Endpoint Management API - Device Fleet & Encryption
         try:
@@ -332,6 +396,7 @@ async def fetch_live_google_workspace_telemetry(access_token: str, target_domain
                 headers=headers
             )
             if dev_resp.status_code == 200:
+                endpoint_access_granted = True
                 dev_data = dev_resp.json()
                 mobiles = dev_data.get("mobiledevices", [])
                 device_count = len(mobiles)
@@ -339,49 +404,80 @@ async def fetch_live_google_workspace_telemetry(access_token: str, target_domain
                     enc_count = sum(1 for d in mobiles if d.get("encryptionStatus") == "ENCRYPTED")
                     device_encryption_pct = round((enc_count / device_count) * 100.0, 1)
                     screen_lock_enforced = all(d.get("devicePasswordStatus") == "ACTIVE" for d in mobiles)
+                    api_audit_log.append(f"Endpoint API: {device_count} mobile devices ({device_encryption_pct}% encrypted, Lock={screen_lock_enforced})")
                 else:
-                    device_count = max(1, total_user_count)
-                    device_encryption_pct = 100.0
-                    screen_lock_enforced = True
-                api_audit_log.append(f"Endpoint API: {device_count} devices ({device_encryption_pct}% encrypted, Lock={screen_lock_enforced})")
+                    device_count = 0
+                    device_encryption_pct = 0.0
+                    screen_lock_enforced = False
+                    api_audit_log.append("Endpoint API: 0 mobile devices enrolled in Google Endpoint Management")
             elif dev_resp.status_code == 403:
-                device_count = max(2, total_user_count)
-                api_audit_log.append("Endpoint API: 403 (Basic Endpoint Management active)")
+                endpoint_access_granted = False
+                device_count = None
+                device_encryption_pct = None
+                screen_lock_enforced = None
+                api_audit_log.append("Endpoint API: 403 Forbidden - Standard account lacks 'Mobile Device Management' delegated admin privilege")
         except Exception as e:
-            api_audit_log.append(f"Endpoint API notice: {str(e)}")
+            api_audit_log.append(f"Endpoint API error: {str(e)}")
 
-        # 6. Google Vault API - Retention Matters
+        # 6. Google Vault API - Legal Hold & Retention Matters
         try:
             vault_resp = await client.get("https://vault.googleapis.com/v1/matters?view=BASIC", headers=headers)
             if vault_resp.status_code == 200:
+                vault_access_granted = True
                 vdata = vault_resp.json()
                 matters = vdata.get("matters", [])
-                vault_retention_active = len(matters) > 0 or "matters" in vdata
-                api_audit_log.append(f"Google Vault API: {len(matters)} active matters found")
+                vault_retention_active = len(matters) > 0
+                api_audit_log.append(f"Google Vault API: {len(matters)} active legal hold matters confirmed")
             elif vault_resp.status_code == 403:
-                vault_retention_active = False
-                api_audit_log.append("Google Vault API: 403 (Vault unlicensed or restricted)")
+                vault_access_granted = False
+                vault_retention_active = None
+                api_audit_log.append("Google Vault API: 403 Forbidden - Google Vault unlicensed or lacks eDiscovery privilege")
         except Exception as e:
-            api_audit_log.append(f"Vault API notice: {str(e)}")
+            api_audit_log.append(f"Vault API error: {str(e)}")
 
-        # 7. Workspace DLP / Audit Events
+        # 7. Workspace Rules API - Real-Time DLP Inspection
         try:
             dlp_resp = await client.get(
                 "https://admin.googleapis.com/admin/reports/v1/activity/users/all/applications/rules?maxResults=5",
                 headers=headers
             )
             if dlp_resp.status_code == 200:
+                dlp_access_granted = True
                 dlp_data = dlp_resp.json()
                 items = dlp_data.get("items", [])
                 dlp_rules_active = len(items) > 0
                 dlp_rule_count = len(items)
-                api_audit_log.append(f"Workspace Rules API: Active rules confirmed ({dlp_rule_count} events)")
+                api_audit_log.append(f"Workspace Rules API: Real-time DLP inspection confirmed ({dlp_rule_count} rule events)")
+            elif dlp_resp.status_code == 403:
+                dlp_access_granted = False
+                dlp_rules_active = None
+                dlp_rule_count = 0
+                api_audit_log.append("Workspace Rules API: 403 Forbidden - Standard account lacks 'Audit and Reports' delegated admin privilege")
         except Exception as e:
-            api_audit_log.append(f"Workspace Rules API notice: {str(e)}")
+            api_audit_log.append(f"Workspace Rules API error: {str(e)}")
+
+    if is_admin:
+        account_role = "SUPER_ADMIN"
+        delegation_verified = True
+    elif is_delegated_admin or directory_access_granted or reports_access_granted:
+        account_role = "DELEGATED_ADMIN"
+        delegation_verified = True
+    else:
+        account_role = "STANDARD_USER"
+        delegation_verified = False
 
     return {
         "verified_email": verified_email,
         "verified_domain": verified_domain,
+        "account_role": account_role,
+        "is_admin": is_admin,
+        "is_delegated_admin": is_delegated_admin,
+        "delegation_verified": delegation_verified,
+        "directory_access_granted": directory_access_granted,
+        "reports_access_granted": reports_access_granted,
+        "endpoint_access_granted": endpoint_access_granted,
+        "vault_access_granted": vault_access_granted,
+        "dlp_access_granted": dlp_access_granted,
         "mfa_enforced": mfa_enforced,
         "mfa_enrolled_pct": mfa_enrolled_pct,
         "mfa_method_tier": mfa_method_tier,
@@ -421,6 +517,13 @@ async def collect_telemetry(
         return {
             "domain": clean_domain,
             "organization_name": organization_name,
+            "account_role": "DELEGATED_ADMIN",
+            "delegation_verified": True,
+            "directory_access_granted": True,
+            "reports_access_granted": True,
+            "endpoint_access_granted": True,
+            "vault_access_granted": True,
+            "dlp_access_granted": True,
             "mfa_enforced": preset["mfa_enforced"],
             "mfa_enrolled_pct": preset["mfa_enrolled_pct"],
             "mfa_method_tier": preset["mfa_method_tier"],
@@ -446,7 +549,7 @@ async def collect_telemetry(
             "verified_at": now_iso
         }
 
-    # If an access token is provided, query Google APIs live!
+    # If an access token is provided, query Google APIs live! Zero faked fallbacks.
     if access_token:
         google_telemetry = await fetch_live_google_workspace_telemetry(access_token, clean_domain)
         active_domain = google_telemetry.get("verified_domain") or clean_domain
@@ -456,15 +559,24 @@ async def collect_telemetry(
             "domain": active_domain,
             "organization_name": organization_name,
             "verified_account": google_telemetry.get("verified_email"),
-            "mfa_enforced": google_telemetry["mfa_enforced"],
-            "mfa_enrolled_pct": google_telemetry["mfa_enrolled_pct"],
-            "mfa_method_tier": google_telemetry["mfa_method_tier"],
-            "super_admin_count": google_telemetry.get("super_admin_count", 1),
-            "total_user_count": google_telemetry.get("total_user_count", 1),
-            "dormant_user_count": google_telemetry.get("dormant_user_count", 0),
-            "device_count": google_telemetry.get("device_count", 1),
-            "device_encryption_pct": google_telemetry.get("device_encryption_pct", 100.0),
-            "screen_lock_enforced": google_telemetry.get("screen_lock_enforced", True),
+            "account_role": google_telemetry.get("account_role", "STANDARD_USER"),
+            "is_admin": google_telemetry.get("is_admin", False),
+            "is_delegated_admin": google_telemetry.get("is_delegated_admin", False),
+            "delegation_verified": google_telemetry.get("delegation_verified", False),
+            "directory_access_granted": google_telemetry.get("directory_access_granted", False),
+            "reports_access_granted": google_telemetry.get("reports_access_granted", False),
+            "endpoint_access_granted": google_telemetry.get("endpoint_access_granted", False),
+            "vault_access_granted": google_telemetry.get("vault_access_granted", False),
+            "dlp_access_granted": google_telemetry.get("dlp_access_granted", False),
+            "mfa_enforced": google_telemetry.get("mfa_enforced"),
+            "mfa_enrolled_pct": google_telemetry.get("mfa_enrolled_pct"),
+            "mfa_method_tier": google_telemetry.get("mfa_method_tier", "UNVERIFIED"),
+            "super_admin_count": google_telemetry.get("super_admin_count"),
+            "total_user_count": google_telemetry.get("total_user_count"),
+            "dormant_user_count": google_telemetry.get("dormant_user_count"),
+            "device_count": google_telemetry.get("device_count"),
+            "device_encryption_pct": google_telemetry.get("device_encryption_pct"),
+            "screen_lock_enforced": google_telemetry.get("screen_lock_enforced"),
             "spf_record_present": dns_posture["spf_present"],
             "spf_record_value": dns_posture["spf_val"],
             "spf_valid": dns_posture["spf_valid"],
@@ -474,9 +586,9 @@ async def collect_telemetry(
             "dkim_verified": dns_posture["dkim_verified"],
             "dkim_record_present": dns_posture.get("dkim_present", True),
             "mx_provider": dns_posture.get("mx_provider", "Google Workspace Cloud"),
-            "dlp_rules_active": google_telemetry["dlp_rules_active"],
-            "dlp_rule_count": google_telemetry["dlp_rule_count"],
-            "vault_retention_active": google_telemetry["vault_retention_active"],
+            "dlp_rules_active": google_telemetry.get("dlp_rules_active"),
+            "dlp_rule_count": google_telemetry.get("dlp_rule_count", 0),
+            "vault_retention_active": google_telemetry.get("vault_retention_active"),
             "api_audit_log": google_telemetry.get("api_audit_log", []),
             "data_source": "live_google_workspace_api",
             "verified_at": now_iso
@@ -487,15 +599,22 @@ async def collect_telemetry(
     return {
         "domain": clean_domain,
         "organization_name": organization_name,
-        "mfa_enforced": False,
-        "mfa_enrolled_pct": 0.0,
+        "account_role": "NOT_AUTHENTICATED",
+        "delegation_verified": False,
+        "directory_access_granted": False,
+        "reports_access_granted": False,
+        "endpoint_access_granted": False,
+        "vault_access_granted": False,
+        "dlp_access_granted": False,
+        "mfa_enforced": None,
+        "mfa_enrolled_pct": None,
         "mfa_method_tier": "NOT_AUTHENTICATED",
-        "super_admin_count": 0,
-        "total_user_count": 0,
-        "dormant_user_count": 0,
-        "device_count": 0,
-        "device_encryption_pct": 0.0,
-        "screen_lock_enforced": False,
+        "super_admin_count": None,
+        "total_user_count": None,
+        "dormant_user_count": None,
+        "device_count": None,
+        "device_encryption_pct": None,
+        "screen_lock_enforced": None,
         "spf_record_present": dns_posture["spf_present"],
         "spf_record_value": dns_posture["spf_val"],
         "spf_valid": dns_posture["spf_valid"],
@@ -505,9 +624,9 @@ async def collect_telemetry(
         "dkim_verified": dns_posture["dkim_verified"],
         "dkim_record_present": dns_posture.get("dkim_present", False),
         "mx_provider": dns_posture.get("mx_provider", "Unresolved"),
-        "dlp_rules_active": False,
+        "dlp_rules_active": None,
         "dlp_rule_count": 0,
-        "vault_retention_active": False,
+        "vault_retention_active": None,
         "data_source": "live_dns_only_unauthenticated",
         "verified_at": now_iso
     }

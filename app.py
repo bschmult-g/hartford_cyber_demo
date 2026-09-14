@@ -193,12 +193,16 @@ async def handle_oauth_callback(
         token_data = token_resp.json()
         access_token = token_data.get("access_token")
 
-    # Collect authentic live Google telemetry
+    # Collect authentic live Google telemetry (Zero faked fallbacks)
     telemetry = await collect_telemetry(
         domain=target_domain or "live",
         organization_name=target_org,
         access_token=access_token
     )
+
+    print(f"[BEACON TELEMETRY] Account: {telemetry.get('verified_account')} | Role: {telemetry.get('account_role')} | Delegation Verified: {telemetry.get('delegation_verified')}")
+    for log_item in telemetry.get("api_audit_log", []):
+        print(f"  -> {log_item}")
 
     rating = evaluate_risk(telemetry)
     attestation = generate_attestation_receipt(telemetry, rating)

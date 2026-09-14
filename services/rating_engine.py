@@ -23,15 +23,18 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
 
     credits: List[Dict[str, Any]] = []
     remediations: List[Dict[str, Any]] = []
-    
-    # 1. Critical Hard Gate: Multi-Factor Authentication
-    if not mfa_enforced or mfa_pct < 80.0:
+
+    # 0. Delegation & RBAC Gate:
+    # If authenticated live, verify that the account possesses Delegated Admin or Super Admin privileges.
+    # Standard employee accounts cannot audit enterprise tenant security posture.
+    if telemetry.get("data_source") == "live_google_workspace_api" and not telemetry.get("delegation_verified", False):
+        user_account = telemetry.get("verified_account") or "authenticated account"
         return {
-            "decision": "DECLINED",
-            "tier": "HIGH_RISK",
-            "tier_display": "Declined - High Ransomware Exposure",
-            "status_color": "crimson",
-            "summary": "Application declined due to unenforced Multi-Factor Authentication. Unprotected credentials account for over 80% of cyber extortion claims.",
+            "decision": "INSUFFICIENT_DELEGATION",
+            "tier": "UNVERIFIED_ROLE",
+            "tier_display": "Action Required - Standard Account Detected",
+            "status_color": "#DC2626",
+            "summary": f"Automated underwriting halted: Account '{user_account}' is a Standard Employee account lacking Delegated Admin privileges. Google Workspace RBAC blocked access (HTTP 403) to domain-wide MFA, endpoint, and user posture. Real-time underwriting requires a Delegated Security Auditor role.",
             "base_premium": base_annual_premium,
             "total_discount_pct": 0.0,
             "discount_amount": 0.0,
@@ -41,7 +44,35 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
             "deductible": 0,
             "remediations": [
                 {
-                    "control": "Enforce 2-Step Verification",
+                    "control": "Grant Delegated Security Auditor Role in Google Workspace",
+                    "impact": "Unlocks real-time underwriting verification and preferred rate tiering",
+                    "action": "In Google Workspace Admin Console (Security > Admin Roles), assign a custom read-only role with 'Users (Read)', 'Reports (Read)', and 'Mobile Device Management (Read)' to this account, or re-authenticate with an authorized administrator."
+                }
+            ],
+            "credits": []
+        }
+
+    # 1. Critical Hard Gate: Multi-Factor Authentication
+    mfa_enforced = telemetry.get("mfa_enforced")
+    mfa_pct = telemetry.get("mfa_enrolled_pct")
+    if mfa_enforced is not True or mfa_pct is None or mfa_pct < 80.0:
+        pct_label = f"{mfa_pct:.0f}%" if mfa_pct is not None else "Unverified"
+        return {
+            "decision": "DECLINED",
+            "tier": "HIGH_RISK",
+            "tier_display": "Declined - High Ransomware Exposure",
+            "status_color": "crimson",
+            "summary": f"Application declined due to unenforced Multi-Factor Authentication (Observed enrollment: {pct_label}). Unprotected credentials account for over 80% of cyber extortion claims.",
+            "base_premium": base_annual_premium,
+            "total_discount_pct": 0.0,
+            "discount_amount": 0.0,
+            "final_annual_premium": None,
+            "final_monthly_premium": None,
+            "coverage_limit": 0,
+            "deductible": 0,
+            "remediations": [
+                {
+                    "control": "Enforce 2-Step Verification Org-Wide",
                     "impact": "Unlocks underwriting eligibility & 10% base discount",
                     "action": "Enable org-wide 2SV enforcement in Google Workspace Admin Console (Security > Authentication > 2-Step Verification)."
                 }
@@ -54,7 +85,7 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
     mfa_credit_amt = base_annual_premium * (mfa_credit_pct / 100.0)
     credits.append({
         "name": "2-Step Verification Enforced",
-        "description": "100% org coverage with hardware key / TOTP support",
+        "description": f"Org coverage ({mfa_pct:.0f}%) verified with hardware key / TOTP support",
         "pct": mfa_credit_pct,
         "amount": mfa_credit_amt
     })
@@ -119,8 +150,8 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
         })
 
     # 5. Super Admin Least-Privilege Governance
-    super_admins = telemetry.get("super_admin_count", 1)
-    if 1 <= super_admins <= 3:
+    super_admins = telemetry.get("super_admin_count")
+    if super_admins is not None and 1 <= super_admins <= 3:
         admin_credit_pct = 2.0
         admin_credit_amt = base_annual_premium * (admin_credit_pct / 100.0)
         credits.append({
@@ -129,18 +160,24 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
             "pct": admin_credit_pct,
             "amount": admin_credit_amt
         })
-    elif super_admins > 6:
+    elif super_admins is not None and super_admins > 6:
         remediations.append({
             "control": f"Remediate Super Admin Sprawl ({super_admins} Admins Detected)",
             "impact": "Reduces catastrophic ransomware takeover risk",
             "action": "Reduce Super Admin role grants to <= 3 dedicated accounts. Use delegated admin roles for day-to-day operations."
         })
+    elif super_admins is None:
+        remediations.append({
+            "control": "Verify Super Admin Least-Privilege Posture",
+            "impact": "Unlocks $170/yr (2%) Blast Radius Reduction credit",
+            "action": "Grant Delegated Admin 'Users (Read)' privilege in Google Workspace to audit super admin account count in real time."
+        })
 
     # 6. Device Fleet & Endpoint Encryption
-    dev_count = telemetry.get("device_count", 0)
-    dev_enc_pct = telemetry.get("device_encryption_pct", 100.0)
-    screen_lock = telemetry.get("screen_lock_enforced", True)
-    if dev_count > 0 and dev_enc_pct >= 90.0 and screen_lock:
+    dev_count = telemetry.get("device_count")
+    dev_enc_pct = telemetry.get("device_encryption_pct")
+    screen_lock = telemetry.get("screen_lock_enforced")
+    if dev_count is not None and dev_count > 0 and dev_enc_pct is not None and dev_enc_pct >= 90.0 and screen_lock is True:
         dev_credit_pct = 2.0
         dev_credit_amt = base_annual_premium * (dev_credit_pct / 100.0)
         credits.append({
@@ -149,11 +186,17 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
             "pct": dev_credit_pct,
             "amount": dev_credit_amt
         })
-    elif dev_count > 0 and dev_enc_pct < 80.0:
+    elif dev_count is not None and dev_count > 0 and dev_enc_pct is not None and dev_enc_pct < 80.0:
         remediations.append({
             "control": "Enforce Device Fleet Disk Encryption",
             "impact": "Eliminates lost-hardware data breach sublimits",
             "action": "Enable BitLocker / FileVault enforcement in Google Endpoint Management."
+        })
+    elif dev_count is None:
+        remediations.append({
+            "control": "Verify Google Endpoint Management Fleet Posture",
+            "impact": "Unlocks $170/yr (2%) Device Encryption credit",
+            "action": "Grant Delegated Admin 'Mobile Device Management (Read)' privilege in Google Workspace to audit endpoint fleet encryption."
         })
 
     # 7. DKIM Cryptographic Signature

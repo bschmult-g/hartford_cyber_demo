@@ -296,6 +296,17 @@ function renderQuoteResult(data) {
       btnBind.style.cursor = "pointer";
       btnBind.textContent = "Bind Standard Policy & Download Binder";
     }
+  } else if (rating.decision === "INSUFFICIENT_DELEGATION") {
+    tierBadge.classList.add("badge-declined");
+    tierBadge.textContent = rating.tier_display || "INSUFFICIENT DELEGATION (403)";
+    quoteDecision.textContent = "ACTION REQUIRED: STANDARD ACCOUNT";
+    quoteDecision.style.color = "#DC2626";
+    if (btnBind) {
+      btnBind.disabled = true;
+      btnBind.style.background = "#DC2626";
+      btnBind.style.cursor = "not-allowed";
+      btnBind.textContent = "🔒 Delegated Admin Role Required in Google Workspace";
+    }
   } else {
     tierBadge.classList.add("badge-declined");
     tierBadge.textContent = rating.tier_display || "DECLINED";
@@ -347,6 +358,58 @@ function renderQuoteResult(data) {
     }
   }
 
+  // Live Delegation Status Banner
+  const delegationBanner = document.getElementById("delegationBanner");
+  const delegationAccount = document.getElementById("delegationAccount");
+  const delegationSubtitle = document.getElementById("delegationSubtitle");
+  const delegationPill = document.getElementById("delegationPill");
+  const delegationIcon = document.getElementById("delegationIcon");
+
+  if (delegationBanner) {
+    const acct = tel.verified_account || "Unknown Account";
+    const role = tel.account_role || "STANDARD_USER";
+    if (delegationAccount) delegationAccount.textContent = acct;
+
+    if (role === "SUPER_ADMIN") {
+      if (delegationIcon) delegationIcon.textContent = "👑";
+      if (delegationSubtitle) delegationSubtitle.textContent = "Google Workspace RBAC: Super Admin (Direct Administrative Authority)";
+      if (delegationPill) {
+        delegationPill.textContent = "SUPER ADMIN";
+        delegationPill.className = "finding-pill pill-pass";
+      }
+      delegationBanner.style.background = "#F0FDF4";
+      delegationBanner.style.borderColor = "#BBF7D0";
+    } else if (role === "DELEGATED_ADMIN") {
+      if (delegationIcon) delegationIcon.textContent = "🛡️";
+      if (delegationSubtitle) delegationSubtitle.textContent = "Google Workspace RBAC: Delegated Admin Verified (Enterprise Least-Privilege)";
+      if (delegationPill) {
+        delegationPill.textContent = "DELEGATED ADMIN";
+        delegationPill.className = "finding-pill pill-pass";
+      }
+      delegationBanner.style.background = "#F0FDF4";
+      delegationBanner.style.borderColor = "#BBF7D0";
+    } else if (role === "NOT_AUTHENTICATED") {
+      if (delegationIcon) delegationIcon.textContent = "🌐";
+      if (delegationSubtitle) delegationSubtitle.textContent = "Unauthenticated Session: Public DNS Only (Workspace Telemetry Not Queried)";
+      if (delegationPill) {
+        delegationPill.textContent = "UNAUTHENTICATED";
+        delegationPill.className = "finding-pill pill-neutral";
+      }
+      delegationBanner.style.background = "#F8FAFC";
+      delegationBanner.style.borderColor = "#E2E8F0";
+    } else {
+      // STANDARD_USER
+      if (delegationIcon) delegationIcon.textContent = "⚠️";
+      if (delegationSubtitle) delegationSubtitle.textContent = "Standard Employee Account: Google RBAC Blocked Organization APIs (HTTP 403)";
+      if (delegationPill) {
+        delegationPill.textContent = "STANDARD ACCOUNT (403)";
+        delegationPill.className = "finding-pill pill-fail";
+      }
+      delegationBanner.style.background = "#FEF2F2";
+      delegationBanner.style.borderColor = "#FECACA";
+    }
+  }
+
   // 1. MFA / 2SV Card
   const pillMfa = document.getElementById("pillMfa");
   const valMfa = document.getElementById("valMfa");
@@ -354,8 +417,16 @@ function renderQuoteResult(data) {
   const impactMfa = document.getElementById("impactMfa");
   const cardMfa = document.getElementById("cardMfa");
 
-  if (tel.mfa_enforced) {
-    pillMfa.textContent = `PASS (${tel.mfa_enrolled_pct || 100}% ENFORCED)`;
+  if (tel.mfa_enforced === null || tel.mfa_enrolled_pct === null || tel.mfa_enrolled_pct === undefined) {
+    pillMfa.textContent = "UNVERIFIED (403)";
+    pillMfa.className = "finding-pill pill-fail";
+    cardMfa.className = "finding-card card-fail";
+    valMfa.textContent = "Blocked by Google RBAC (HTTP 403)";
+    explMfa.textContent = "Standard employee account cannot read domain-wide 2SV statistics. Google Reports API returned 403 Forbidden.";
+    impactMfa.textContent = "Action Required: Delegated Admin Role";
+    impactMfa.className = "finding-impact impact-fail";
+  } else if (tel.mfa_enforced) {
+    pillMfa.textContent = `PASS (${tel.mfa_enrolled_pct}% ENFORCED)`;
     pillMfa.className = "finding-pill pill-pass";
     cardMfa.className = "finding-card card-pass";
     valMfa.textContent = `Enforced across org (${tel.mfa_method_tier || "FIDO2 / TOTP Security Key"})`;
@@ -366,7 +437,7 @@ function renderQuoteResult(data) {
     pillMfa.textContent = "FAIL (NOT ENFORCED)";
     pillMfa.className = "finding-pill pill-fail";
     cardMfa.className = "finding-card card-fail";
-    valMfa.textContent = "Unenforced (2-Step Verification optional or disabled in Workspace)";
+    valMfa.textContent = `Unenforced (${tel.mfa_enrolled_pct || 0}% Enrolled in Workspace)`;
     explMfa.textContent = "MANDATORY ELIGIBILITY GATE: The Hartford requires 100% MFA enforcement to prevent credential stuffing & ransomware deployment.";
     impactMfa.textContent = "Impact: Underwriting Declined (Ransomware Ineligible)";
     impactMfa.className = "finding-impact impact-fail";
@@ -423,9 +494,17 @@ function renderQuoteResult(data) {
   const impactAdmin = document.getElementById("impactAdmin");
   const cardAdmin = document.getElementById("cardAdmin");
 
-  const adminCount = tel.super_admin_count || 1;
+  const adminCount = tel.super_admin_count;
   if (pillAdmin) {
-    if (adminCount <= 3) {
+    if (adminCount === null || adminCount === undefined) {
+      pillAdmin.textContent = "UNVERIFIED (403)";
+      pillAdmin.className = "finding-pill pill-fail";
+      cardAdmin.className = "finding-card card-fail";
+      valAdmin.textContent = "Blocked by Google RBAC (HTTP 403)";
+      explAdmin.textContent = "Directory Users API returned 403 Forbidden. Requires 'Users (Read)' delegated admin privilege.";
+      impactAdmin.textContent = "Impact: Ineligible for Least-Privilege Credit";
+      impactAdmin.className = "finding-impact impact-fail";
+    } else if (adminCount <= 3) {
       pillAdmin.textContent = `OPTIMAL (${adminCount} ADMINS)`;
       pillAdmin.className = "finding-pill pill-pass";
       cardAdmin.className = "finding-card card-pass";
@@ -459,12 +538,28 @@ function renderQuoteResult(data) {
   const impactDevice = document.getElementById("impactDevice");
   const cardDevice = document.getElementById("cardDevice");
 
-  const devCount = tel.device_count || 0;
-  const devEnc = tel.device_encryption_pct !== undefined ? tel.device_encryption_pct : 100.0;
-  const screenLock = tel.screen_lock_enforced !== false;
+  const devCount = tel.device_count;
+  const devEnc = tel.device_encryption_pct;
+  const screenLock = tel.screen_lock_enforced;
 
   if (pillDevice) {
-    if (devEnc >= 90.0 && screenLock) {
+    if (devCount === null || devCount === undefined) {
+      pillDevice.textContent = "UNVERIFIED (403)";
+      pillDevice.className = "finding-pill pill-fail";
+      cardDevice.className = "finding-card card-fail";
+      valDevice.textContent = "Blocked by Google RBAC (HTTP 403)";
+      explDevice.textContent = "Google Endpoint Management API returned 403 Forbidden. Requires 'Mobile Device Management' delegated admin privilege.";
+      impactDevice.textContent = "Impact: Ineligible for Endpoint Credit";
+      impactDevice.className = "finding-impact impact-fail";
+    } else if (devCount === 0) {
+      pillDevice.textContent = "0 ENROLLED DEVICES";
+      pillDevice.className = "finding-pill pill-neutral";
+      cardDevice.className = "finding-card card-neutral";
+      valDevice.textContent = "0 Devices in Google Endpoint Management";
+      explDevice.textContent = "No mobile or laptop endpoints enrolled in Google Endpoint Management.";
+      impactDevice.textContent = "Status: No Enrolled Endpoint Credit";
+      impactDevice.className = "finding-impact impact-neutral";
+    } else if (devEnc >= 90.0 && screenLock) {
       pillDevice.textContent = `PASS (${Math.round(devEnc)}% ENCRYPTED)`;
       pillDevice.className = "finding-pill pill-pass";
       cardDevice.className = "finding-card card-pass";
@@ -528,7 +623,15 @@ function renderQuoteResult(data) {
   const impactDlp = document.getElementById("impactDlp");
   const cardDlp = document.getElementById("cardDlp");
 
-  if (tel.dlp_rules_active) {
+  if (tel.dlp_rules_active === null || tel.dlp_rules_active === undefined) {
+    pillDlp.textContent = "UNVERIFIED (403)";
+    pillDlp.className = "finding-pill pill-fail";
+    cardDlp.className = "finding-card card-fail";
+    valDlp.textContent = "Blocked by Google RBAC (HTTP 403)";
+    explDlp.textContent = "Workspace Rules API returned 403 Forbidden. Requires 'Audit and Reports' delegated admin privilege.";
+    impactDlp.textContent = "Impact: Ineligible for DLP Credit";
+    impactDlp.className = "finding-impact impact-fail";
+  } else if (tel.dlp_rules_active) {
     pillDlp.textContent = "PASS (ACTIVE)";
     pillDlp.className = "finding-pill pill-pass";
     cardDlp.className = "finding-card card-pass";
@@ -553,7 +656,15 @@ function renderQuoteResult(data) {
   const impactVault = document.getElementById("impactVault");
   const cardVault = document.getElementById("cardVault");
 
-  if (tel.vault_retention_active) {
+  if (tel.vault_retention_active === null || tel.vault_retention_active === undefined) {
+    pillVault.textContent = "UNVERIFIED (403)";
+    pillVault.className = "finding-pill pill-fail";
+    cardVault.className = "finding-card card-fail";
+    valVault.textContent = "Blocked by Google RBAC (HTTP 403)";
+    explVault.textContent = "Google Vault API returned 403 Forbidden. Google Vault is either unlicensed or account lacks eDiscovery privilege.";
+    impactVault.textContent = "Impact: Ineligible for Vault Retention Credit";
+    impactVault.className = "finding-impact impact-fail";
+  } else if (tel.vault_retention_active) {
     pillVault.textContent = "PASS (ACTIVE)";
     pillVault.className = "finding-pill pill-pass";
     cardVault.className = "finding-card card-pass";
@@ -578,11 +689,19 @@ function renderQuoteResult(data) {
   const impactUsers = document.getElementById("impactUsers");
   const cardUsers = document.getElementById("cardUsers");
 
-  const totalUsers = tel.total_user_count || 1;
-  const dormantCount = tel.dormant_user_count || 0;
+  const totalUsers = tel.total_user_count;
+  const dormantCount = tel.dormant_user_count;
 
   if (pillUsers) {
-    if (dormantCount === 0) {
+    if (totalUsers === null || totalUsers === undefined) {
+      pillUsers.textContent = "UNVERIFIED (403)";
+      pillUsers.className = "finding-pill pill-fail";
+      cardUsers.className = "finding-card card-fail";
+      valUsers.textContent = "Blocked by Google RBAC (HTTP 403)";
+      explUsers.textContent = "Directory Users API returned 403 Forbidden. Tenant headcount cannot be enumerated without delegated admin rights.";
+      impactUsers.textContent = "Status: Unverified Tenant Scope";
+      impactUsers.className = "finding-impact impact-fail";
+    } else if (dormantCount === 0) {
       pillUsers.textContent = `CLEAN (${totalUsers} USERS)`;
       pillUsers.className = "finding-pill pill-pass";
       cardUsers.className = "finding-card card-pass";
@@ -630,6 +749,13 @@ function renderQuoteResult(data) {
     rawDisplay.textContent = JSON.stringify({
       domain: tel.domain,
       verified_account: tel.verified_account || "N/A (Canned/DNS)",
+      account_role: tel.account_role || "UNKNOWN",
+      delegation_verified: tel.delegation_verified || false,
+      directory_access_granted: tel.directory_access_granted || false,
+      reports_access_granted: tel.reports_access_granted || false,
+      endpoint_access_granted: tel.endpoint_access_granted || false,
+      vault_access_granted: tel.vault_access_granted || false,
+      dlp_access_granted: tel.dlp_access_granted || false,
       mfa_enforced: tel.mfa_enforced,
       mfa_enrolled_pct: tel.mfa_enrolled_pct,
       mfa_method_tier: tel.mfa_method_tier,
