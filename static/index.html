@@ -18,11 +18,16 @@
     </div>
 
     <!-- Direct Header Transparency Tab / Button (Accessible Across All Steps) -->
-    <div class="header-center-action">
+    <div class="header-center-action" style="display:flex; align-items:center; gap:8px;">
       <button type="button" class="btn-header-guide" onclick="openTransparencyModal('tabApis')" title="View what Google APIs verify in your environment">
         <span class="guide-icon">🛡️</span>
         <span class="guide-text">Customer Security &amp; API Guide</span>
         <span class="guide-badge">Read-Only Scopes</span>
+      </button>
+      <button type="button" class="btn-header-guide btn-header-underwriter" onclick="openTransparencyModal('tabThreatIntel')" title="Underwriter Risk Portal: Mandiant Threat Intelligence &amp; Sector Benchmark">
+        <span class="guide-icon">🎯</span>
+        <span class="guide-text">Underwriter Portal</span>
+        <span class="guide-badge badge-mandiant">Mandiant Threat Intel</span>
       </button>
     </div>
 
@@ -737,6 +742,78 @@
 
               </div>
 
+              <!-- Underwriter Threat Intelligence Assessment Panel (Mandiant API) -->
+              <div class="uw-intel-panel" id="underwriterIntelPanel" style="display:none;">
+                <div class="uw-intel-header">
+                  <div class="uw-intel-title-group">
+                    <span style="font-size:22px;">🎯</span>
+                    <div>
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <strong style="font-size:14px; color:#0F172A;">Underwriter Threat Intelligence Correlation</strong>
+                        <span class="uw-mandiant-tag">Mandiant Live Feed</span>
+                      </div>
+                      <span style="font-size:11px; color:#64748B;">Live cross-correlation: Verified applicant controls vs. sector-active attack vectors</span>
+                    </div>
+                  </div>
+                  <div class="uw-sector-selector-wrap">
+                    <label for="uwSectorSelect" style="font-size:11px; font-weight:700; color:#475569;">Industry Profile:</label>
+                    <select id="uwSectorSelect" class="uw-sector-select" onchange="handleUnderwriterSectorChange(this.value)">
+                      <option value="legal_accounting">Legal &amp; Professional Services</option>
+                      <option value="healthcare">Healthcare &amp; Clinical Networks</option>
+                      <option value="financial_services">Financial Services &amp; Wealth Tech</option>
+                      <option value="retail_hospitality">Retail, eCommerce &amp; Hospitality</option>
+                      <option value="technology_saas">B2B SaaS &amp; Cloud Software</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Sector Threat Banner -->
+                <div class="uw-threat-banner" id="uwThreatBanner">
+                  <div>
+                    <div class="uw-threat-stat-label">Sector Hazard Rating</div>
+                    <div class="uw-threat-stat-val" id="uwStatHazard">-</div>
+                  </div>
+                  <div>
+                    <div class="uw-threat-stat-label">Active Sector Threat Actors</div>
+                    <div class="uw-threat-stat-val" id="uwStatActors" style="font-size:11px; line-height:1.4;">-</div>
+                  </div>
+                  <div>
+                    <div class="uw-threat-stat-label">Campaign Velocity &amp; Surge</div>
+                    <div class="uw-threat-stat-val" id="uwStatVelocity" style="font-size:12px;">-</div>
+                  </div>
+                </div>
+
+                <!-- Threat Defense Fit Scorecards -->
+                <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:12px; font-weight:700; color:#334155;">Sector Threat Vector Exposure vs. Verified Controls:</span>
+                  <a href="javascript:void(0)" onclick="openTransparencyModal('tabThreatIntel')" style="font-size:11px; font-weight:700; color:#0284C7; text-decoration:underline;">
+                    Explore Mandiant API Feed →
+                  </a>
+                </div>
+                <div class="uw-scorecard-list" id="uwScorecardList">
+                  <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Underwriter Sublimit & Binding Verdict Card -->
+                <div class="uw-verdict-card" id="uwVerdictCard">
+                  <div style="flex:1;">
+                    <div style="font-size:10px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">
+                      Actuarial Underwriting Determination
+                    </div>
+                    <div style="font-size:15px; font-weight:800; color:#0F172A; margin-bottom:4px;" id="uwSublimitAction">
+                      -
+                    </div>
+                    <div style="font-size:12px; color:#334155; line-height:1.4;" id="uwVerdictRec">
+                      -
+                    </div>
+                  </div>
+                  <div class="uw-fit-meter">
+                    <div class="uw-fit-score" id="uwFitScore">-</div>
+                    <div class="uw-fit-label">Threat-Defense Fit</div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Instant Bind Action -->
               <button class="btn-next" id="btnBindPolicy" style="width:100%; padding:14px; font-size:16px; background-color:var(--hartford-maroon);" onclick="bindPolicy()">
                 Bind Policy &amp; Download Binder
@@ -936,6 +1013,9 @@
         </button>
         <button class="transparency-tab-btn" id="btnTabCrypto" onclick="switchTransparencyTab('tabCrypto')">
           <span>🔐</span> Zero-Retention Cryptography
+        </button>
+        <button class="transparency-tab-btn" id="btnTabThreatIntel" onclick="switchTransparencyTab('tabThreatIntel')">
+          <span>🎯</span> Underwriter Threat Intel (Mandiant)
         </button>
       </div>
 
@@ -1151,6 +1231,76 @@
   }
 }</pre>
           </div>
+        </div>
+
+        <!-- TAB 4: UNDERWRITER THREAT INTELLIGENCE (MANDIANT) -->
+        <div class="transparency-tab-content" id="tabThreatIntel">
+          <div style="margin-bottom:14px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+              <h4 style="font-size:15px; font-weight:700; color:#0F172A; margin:0;">
+                🎯 Google Cloud Threat Intelligence (Mandiant) for Underwriters
+              </h4>
+              <span class="uw-mandiant-tag">threatintelligence.googleapis.com</span>
+            </div>
+            <p style="font-size:12px; color:#475569; margin-top:6px; line-height:1.45;">
+              Underwriters no longer rely on outdated 3-year-old SIC/NAICS actuarial averages. By tapping directly into <strong>Mandiant Threat Intelligence on Google Cloud</strong>, The Hartford enriches applicant telemetry with real-time sector hazard indexes, active threat actor campaigns, and precision vector weighting.
+            </p>
+          </div>
+
+          <!-- Sector Selector in Modal -->
+          <div style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:14px; margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+              <label style="font-size:12px; font-weight:800; color:#1E293B;">Explore Sector Threat Landscapes (Mandiant API):</label>
+              <select class="uw-sector-select" id="modalSectorSelect" onchange="switchModalThreatSector(this.value)">
+                <option value="legal_accounting">Legal, Accounting &amp; Professional Advisory</option>
+                <option value="healthcare">Healthcare, Medical Clinics &amp; Life Sciences</option>
+                <option value="financial_services">Banking, Wealth Management &amp; Fintech</option>
+                <option value="retail_hospitality">Retail, Hospitality &amp; E-Commerce</option>
+                <option value="technology_saas">Software, Cloud Services &amp; Technology SaaS</option>
+              </select>
+            </div>
+
+            <!-- Dynamic Sector Summary Box in Modal -->
+            <div id="modalSectorCard">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:13px; font-weight:800; color:#0F172A;" id="modalSectorName">Legal, Accounting &amp; Professional Advisory</span>
+                <span class="uw-threat-badge-elev" id="modalSectorThreatLevel">ELEVATED (78/100)</span>
+              </div>
+              <p style="font-size:12px; color:#475569; margin-bottom:10px; line-height:1.4;" id="modalSectorSummary">
+                Mandiant Threat Intelligence indicates sophisticated financial threat actors are heavily targeting law firms and accounting practices with executive impersonation, invoice diversion, and OAuth consent-grant phishing.
+              </p>
+              <div style="font-size:11px; color:#334155; margin-bottom:8px;">
+                <strong>Active Threat Actors:</strong> <span id="modalSectorActors" style="color:#C2410C; font-weight:600;">FIN7, TA505 (Clop), Storm-0539, Scattered Spider</span>
+              </div>
+              <div style="font-size:11px; color:#334155;">
+                <strong>Current Trending Campaign:</strong> <span id="modalSectorCampaign" style="color:#0369A1; font-weight:600;">Targeted BEC Spear-Phishing &amp; Real Estate Escrow Diversion</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actuarial Synergy Matrix -->
+          <div style="margin-top:16px;">
+            <h5 style="font-size:13px; font-weight:800; color:#1E293B; margin-bottom:8px;">How Real-Time Mandiant Intel Directs Underwriting Decisions:</h5>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div style="background:#F0FDF4; border:1px solid #BBF7D0; border-radius:6px; padding:10px; font-size:11px;">
+                <strong style="color:#166534; display:block; margin-bottom:4px;">1. Dynamic Industry Hazard Index</strong>
+                Instead of static tables, baseline rates adjust dynamically based on active ransomware campaign velocity in the applicant's sector.
+              </div>
+              <div style="background:#F0F9FF; border:1px solid #BAE6FD; border-radius:6px; padding:10px; font-size:11px;">
+                <strong style="color:#0369A1; display:block; margin-bottom:4px;">2. Context-Aware Control Weighting</strong>
+                DMARC p=reject is weighted 2x higher for Legal/Finance (countering BEC wire fraud); FIDO2 MFA is weighted 2x higher for Healthcare.
+              </div>
+              <div style="background:#FFFBEB; border:1px solid #FDE68A; border-radius:6px; padding:10px; font-size:11px;">
+                <strong style="color:#B45309; display:block; margin-bottom:4px;">3. Sublimit Waiver Engine</strong>
+                When an applicant verifies verified Google controls that neutralize an active sector campaign, standard ransomware sublimits are waived.
+              </div>
+              <div style="background:#FAF5FF; border:1px solid #E9D5FF; border-radius:6px; padding:10px; font-size:11px;">
+                <strong style="color:#7E22CE; display:block; margin-bottom:4px;">4. Actionable CISO Explanations</strong>
+                Underwriters present policyholders with frontline threat actor context, transforming insurance quotes into strategic risk consultancies.
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>

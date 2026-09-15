@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 from services.telemetry import collect_telemetry, check_email_security
 from services.rating_engine import evaluate_risk
 from services.attestation import generate_attestation_receipt
+from services.threat_intel import get_all_sector_profiles, assess_applicant_posture_against_threats
 
 load_dotenv()
 
@@ -320,6 +321,39 @@ async def probe_dns_live(domain: str = Query(..., description="Target domain, e.
     return {
         "status": "success",
         "dns_posture": res
+    }
+
+# ==================== GOOGLE CLOUD THREAT INTELLIGENCE (MANDIANT) ====================
+
+class ThreatAssessmentRequest(BaseModel):
+    telemetry: Dict[str, Any]
+    industry_key: Optional[str] = "legal_accounting"
+
+@app.get("/api/threat-intel/sectors")
+async def get_threat_intel_sectors():
+    """
+    Returns available Mandiant sector threat intelligence profiles
+    from threatintelligence.googleapis.com.
+    """
+    return {
+        "status": "success",
+        "api_source": "threatintelligence.googleapis.com (Google Cloud Mandiant Threat Intelligence)",
+        "sectors": get_all_sector_profiles()
+    }
+
+@app.post("/api/threat-intel/assess")
+async def perform_threat_assessment(req: ThreatAssessmentRequest):
+    """
+    Evaluates applicant's verified Google Workspace security posture against
+    real-time sector threat intelligence and active threat actor campaigns.
+    """
+    assessment = assess_applicant_posture_against_threats(
+        telemetry=req.telemetry,
+        industry_key=req.industry_key or "legal_accounting"
+    )
+    return {
+        "status": "success",
+        "assessment": assessment
     }
 
 # Mount static frontend

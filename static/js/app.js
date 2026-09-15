@@ -150,6 +150,8 @@ async function triggerGoogleOAuth() {
   const scanBox = document.getElementById("scanProgressBox");
   const quoteCard = document.getElementById("quoteResultCard");
   const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
+  const uwPanel = document.getElementById("underwriterIntelPanel");
+  if (uwPanel) uwPanel.style.display = "none";
 
   verifyBtn.style.display = "none";
   quoteCard.classList.remove("active");
@@ -801,6 +803,15 @@ function renderQuoteResult(data) {
   quoteCard.classList.add("active");
   const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
   verifyBtn.style.display = "flex";
+
+  // Underwriter Threat Intelligence Correlation Panel
+  const uwPanel = document.getElementById("underwriterIntelPanel");
+  if (uwPanel) {
+    uwPanel.style.display = "block";
+    const sectorSelect = document.getElementById("uwSectorSelect");
+    const chosenSector = sectorSelect ? sectorSelect.value : "legal_accounting";
+    runUnderwriterSectorAssessment(chosenSector);
+  }
 }
 
 function copyTelemetryData() {
@@ -855,6 +866,8 @@ async function executeScenarioUnderwrite(domain) {
   const scanBox = document.getElementById("scanProgressBox");
   const quoteCard = document.getElementById("quoteResultCard");
   const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
+  const uwPanel = document.getElementById("underwriterIntelPanel");
+  if (uwPanel) uwPanel.style.display = "none";
 
   quoteCard.classList.remove("active");
   verifyBtn.style.display = "none";
@@ -1028,7 +1041,8 @@ function switchTransparencyTab(tabId) {
   const tabBtns = [
     { id: 'tabApis', btnId: 'btnTabApis' },
     { id: 'tabPrivacy', btnId: 'btnTabPrivacy' },
-    { id: 'tabCrypto', btnId: 'btnTabCrypto' }
+    { id: 'tabCrypto', btnId: 'btnTabCrypto' },
+    { id: 'tabThreatIntel', btnId: 'btnTabThreatIntel' }
   ];
 
   tabBtns.forEach(t => {
@@ -1051,4 +1065,182 @@ function switchTransparencyTab(tabId) {
       }
     }
   });
+
+  if (tabId === 'tabThreatIntel') {
+    const modalSelect = document.getElementById("modalSectorSelect");
+    const initialSector = modalSelect ? modalSelect.value : "legal_accounting";
+    switchModalThreatSector(initialSector);
+  }
+}
+
+/* ==================== UNDERWRITER THREAT INTEL ENGINE (MANDIANT API) ==================== */
+
+let cachedThreatSectors = null;
+
+async function loadThreatIntelSectors() {
+  if (cachedThreatSectors) return cachedThreatSectors;
+  try {
+    const resp = await fetch("/api/threat-intel/sectors");
+    const data = await resp.json();
+    if (data.status === "success" || data.status === "ok") {
+      cachedThreatSectors = data.sectors;
+      return cachedThreatSectors;
+    }
+  } catch (err) {
+    console.error("Failed to fetch threat intel sectors:", err);
+  }
+  return null;
+}
+
+async function switchModalThreatSector(sectorKey) {
+  const sectors = await loadThreatIntelSectors();
+  if (!sectors) return;
+  const s = Array.isArray(sectors) ? sectors.find(item => item.id === sectorKey) : sectors[sectorKey];
+  if (!s) return;
+
+  const nameEl = document.getElementById("modalSectorName");
+  const badgeEl = document.getElementById("modalSectorThreatLevel");
+  const sumEl = document.getElementById("modalSectorSummary");
+  const actEl = document.getElementById("modalSectorActors");
+  const campEl = document.getElementById("modalSectorCampaign");
+
+  const threatScore = s.threat_score || s.hazard_score || 75;
+  const threatLevel = s.threat_level || s.hazard_level || "ELEVATED";
+
+  if (nameEl) nameEl.textContent = s.display_name || s.sector_name || sectorKey;
+  if (badgeEl) {
+    badgeEl.textContent = `${threatLevel} (${threatScore}/100)`;
+    badgeEl.className = threatScore >= 80 ? "uw-threat-badge-crit" : "uw-threat-badge-elev";
+  }
+  if (sumEl) sumEl.textContent = s.mandiant_intel_summary || s.summary || "";
+  if (actEl) actEl.textContent = (s.active_threat_actors || []).join(", ");
+  if (campEl) campEl.textContent = s.trending_campaigns || s.trending_campaign || "";
+}
+
+function handleUnderwriterSectorChange(sectorKey) {
+  runUnderwriterSectorAssessment(sectorKey);
+}
+
+async function runUnderwriterSectorAssessment(sectorKey) {
+  if (!lastTelemetryData || !lastTelemetryData.telemetry) return;
+  const tel = lastTelemetryData.telemetry;
+
+  try {
+    const resp = await fetch("/api/threat-intel/assess", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        industry_key: sectorKey,
+        telemetry: tel
+      })
+    });
+    const data = await resp.json();
+    if ((data.status === "success" || data.status === "ok") && data.assessment) {
+      renderUnderwriterAssessment(data.assessment);
+    }
+  } catch (err) {
+    console.error("Failed to run underwriter threat assessment:", err);
+  }
+}
+
+function renderUnderwriterAssessment(assessment) {
+  const sec = assessment.sector || {};
+  const threatScore = sec.threat_score || sec.hazard_score || 75;
+  const threatLevel = sec.threat_level || sec.hazard_level || "ELEVATED";
+
+  // 1. Sector Threat Banner
+  const hazardEl = document.getElementById("uwStatHazard");
+  if (hazardEl) {
+    const badgeClass = threatScore >= 80 ? "uw-threat-badge-crit" : "uw-threat-badge-elev";
+    hazardEl.innerHTML = `<span class="${badgeClass}">${threatLevel} (${threatScore}/100)</span>`;
+  }
+
+  const actorsEl = document.getElementById("uwStatActors");
+  if (actorsEl) {
+    actorsEl.textContent = (sec.active_threat_actors || []).join(", ") || "General Cybercrime Cartels";
+  }
+
+  const velocityEl = document.getElementById("uwStatVelocity");
+  if (velocityEl) {
+    const campaignText = sec.trending_campaigns || sec.trending_campaign || "Active Campaign Surge";
+    velocityEl.innerHTML = `<strong style="color:#C2410C;">${assessment.campaign_velocity || "Active Surge"}</strong><br/><span style="color:#475569; font-weight:500; font-size:11px; line-height:1.3; display:inline-block; margin-top:2px;">${escapeHtml(campaignText)}</span>`;
+  }
+
+  // 2. Vector Scorecards
+  const scorecardList = document.getElementById("uwScorecardList");
+  const scorecards = assessment.vector_scorecards || assessment.scorecards || [];
+  if (scorecardList && scorecards.length > 0) {
+    scorecardList.innerHTML = scorecards.map(sc => {
+      let icon = "⚠️";
+      let pillClass = sc.badge_class || "pill-warn";
+      if (sc.status === "VERIFIED_NEUTRALIZED" || sc.status === "MITIGATED" || sc.status === "ADEQUATELY_DEFENDED") {
+        icon = "✅";
+        if (!sc.badge_class) pillClass = "pill-pass";
+      } else if (sc.status === "CRITICAL_EXPOSURE" || sc.status === "HIGH_BLAST_RADIUS" || sc.status === "UNMANAGED_BYOD") {
+        icon = "🚨";
+        if (!sc.badge_class) pillClass = "pill-fail";
+      } else if (sc.status === "UNVERIFIED") {
+        icon = "🔒";
+        if (!sc.badge_class) pillClass = "pill-fail";
+      }
+
+      const displayLabel = sc.status_label || sc.status || "Evaluated";
+
+      return `
+        <div class="uw-scorecard-row">
+          <div class="uw-scorecard-top">
+            <div class="uw-scorecard-vector">
+              <span>${icon}</span>
+              <span>${escapeHtml(sc.vector_name)}</span>
+              <span class="uw-scorecard-prev">${sc.prevalence_pct}% sector prevalence</span>
+            </div>
+            <span class="finding-pill ${pillClass}">${escapeHtml(displayLabel)}</span>
+          </div>
+          <div class="uw-scorecard-evidence">
+            <strong style="color:#0F172A;">Verified Evidence:</strong> <span style="color:#334155;">${escapeHtml(sc.evidence)}</span>
+          </div>
+          <div class="uw-scorecard-underwriter">
+            <strong>Mandiant / Underwriter Context:</strong> ${escapeHtml(sc.underwriter_note || sc.underwriter_rationale || "")}
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // 3. Verdict Card & Fit Score
+  const sublimitActionEl = document.getElementById("uwSublimitAction");
+  if (sublimitActionEl) {
+    const actionText = assessment.sublimit_action || assessment.sublimit_recommendation || "Standard Terms Apply";
+    sublimitActionEl.textContent = actionText;
+    if (actionText.includes("WAIVED")) {
+      sublimitActionEl.style.color = "#166534";
+    } else if (actionText.includes("APPLIED") || actionText.includes("RESTRICTIVE")) {
+      sublimitActionEl.style.color = "#DC2626";
+    } else {
+      sublimitActionEl.style.color = "#92400E";
+    }
+  }
+
+  const verdictRecEl = document.getElementById("uwVerdictRec");
+  if (verdictRecEl) {
+    verdictRecEl.textContent = assessment.underwriter_recommendation || assessment.underwriter_guidance || "";
+  }
+
+  const fitScore = assessment.posture_fit_score !== undefined ? assessment.posture_fit_score : (assessment.threat_defense_fit_score || 0);
+  const fitScoreEl = document.getElementById("uwFitScore");
+  const verdictCard = document.getElementById("uwVerdictCard");
+  if (fitScoreEl && verdictCard) {
+    fitScoreEl.textContent = `${fitScore}/100`;
+    verdictCard.className = "uw-verdict-card";
+
+    if (fitScore >= 80) {
+      fitScoreEl.style.color = "#166534";
+    } else if (fitScore >= 50) {
+      verdictCard.classList.add("verdict-warn");
+      fitScoreEl.style.color = "#D97706";
+    } else {
+      verdictCard.classList.add("verdict-crit");
+      fitScoreEl.style.color = "#DC2626";
+    }
+  }
 }

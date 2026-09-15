@@ -1780,3 +1780,234 @@ body {
   color: #334155;
   line-height: 1.5;
 }
+
+/* ==================== UNDERWRITER THREAT INTELLIGENCE PORTAL ==================== */
+.btn-header-underwriter {
+  background: #0F172A !important;
+  border-color: #334155 !important;
+}
+
+.btn-header-underwriter:hover {
+  background: #1E293B !important;
+  border-color: #475569 !important;
+}
+
+.badge-mandiant {
+  background: #EA580C !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+
+.uw-intel-panel {
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 10px;
+  padding: 18px;
+  margin-top: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.uw-intel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid #E2E8F0;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.uw-intel-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.uw-mandiant-tag {
+  background: #FFF7ED;
+  border: 1px solid #FDBA74;
+  color: #C2410C;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.uw-sector-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uw-sector-select {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1E293B;
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  outline: none;
+}
+
+.uw-sector-select:focus {
+  border-color: #0284C7;
+  box-shadow: 0 0 0 2px rgba(2,132,199,0.15);
+}
+
+.uw-threat-banner {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .uw-threat-banner {
+    grid-template-columns: 1fr;
+  }
+}
+
+.uw-threat-stat-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.uw-threat-stat-val {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0F172A;
+}
+
+.uw-threat-badge-crit {
+  color: #DC2626;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.uw-threat-badge-elev {
+  color: #D97706;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.uw-scorecard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.uw-scorecard-row {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+.uw-scorecard-row:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.uw-scorecard-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.uw-scorecard-vector {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1E293B;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uw-scorecard-prev {
+  font-size: 11px;
+  font-weight: 600;
+  color: #DC2626;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.uw-scorecard-evidence {
+  font-size: 12px;
+  color: #334155;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.uw-scorecard-underwriter {
+  font-size: 11px;
+  color: #0369A1;
+  background: #F0F9FF;
+  border-left: 3px solid #0284C7;
+  padding: 6px 10px;
+  border-radius: 0 4px 4px 0;
+  margin-top: 6px;
+}
+
+.uw-verdict-card {
+  background: #F0FDF4;
+  border: 1px solid #86EFAC;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.uw-verdict-card.verdict-warn {
+  background: #FFFBEB;
+  border-color: #FDE68A;
+}
+
+.uw-verdict-card.verdict-crit {
+  background: #FEF2F2;
+  border-color: #FECACA;
+}
+
+.uw-fit-meter {
+  text-align: center;
+  min-width: 90px;
+}
+
+.uw-fit-score {
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.uw-fit-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748B;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
