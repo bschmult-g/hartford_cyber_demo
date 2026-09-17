@@ -26,31 +26,80 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
 
     # 0. Delegation & RBAC Gate:
     # If authenticated live, verify that the account possesses Delegated Admin or Super Admin privileges.
-    # Standard employee accounts cannot audit enterprise tenant security posture.
-    if telemetry.get("data_source") == "live_google_workspace_api" and not telemetry.get("delegation_verified", False):
+    if not telemetry.get("delegation_verified", False) and telemetry.get("data_source") in ["live_google_workspace_api", "preset_scenario_simulation"]:
         user_account = telemetry.get("verified_account") or "authenticated account"
-        return {
-            "decision": "INSUFFICIENT_DELEGATION",
-            "tier": "UNVERIFIED_ROLE",
-            "tier_display": "Action Required - Standard Account Detected",
-            "status_color": "#DC2626",
-            "summary": f"Automated underwriting halted: Account '{user_account}' is a Standard Employee account lacking Delegated Admin privileges. Google Workspace RBAC blocked access (HTTP 403) to domain-wide MFA, endpoint, and user posture. Real-time underwriting requires a Delegated Security Auditor role.",
-            "base_premium": base_annual_premium,
-            "total_discount_pct": 0.0,
-            "discount_amount": 0.0,
-            "final_annual_premium": None,
-            "final_monthly_premium": None,
-            "coverage_limit": 0,
-            "deductible": 0,
-            "remediations": [
-                {
-                    "control": "Grant Delegated Security Auditor Role in Google Workspace",
-                    "impact": "Unlocks real-time underwriting verification and preferred rate tiering",
-                    "action": "In Google Workspace Admin Console (Security > Admin Roles), assign a custom read-only role with 'Users (Read)', 'Reports (Read)', and 'Mobile Device Management (Read)' to this account, or re-authenticate with an authorized administrator."
-                }
-            ],
-            "credits": []
-        }
+        rbac_cause = telemetry.get("rbac_block_cause", "WORKSPACE_ROLE_STANDARD")
+
+        if rbac_cause == "GCP_API_DISABLED":
+            detail = telemetry.get("rbac_block_detail") or "Admin SDK API is disabled in Google Cloud Console."
+            return {
+                "decision": "GCP_CONFIGURATION_REQUIRED",
+                "tier": "GCP_CONFIG_ERROR",
+                "tier_display": "Action Required: Google Cloud API Disabled",
+                "status_color": "#D97706",
+                "summary": f"Underwriting verification paused: Google Cloud Project (799321431260) has not enabled the Admin SDK API in Google Cloud Console. This is an infrastructure project configuration step, not an applicant policy decline. Details: {detail}",
+                "base_premium": base_annual_premium,
+                "total_discount_pct": 0.0,
+                "discount_amount": 0.0,
+                "final_annual_premium": None,
+                "final_monthly_premium": None,
+                "coverage_limit": 0,
+                "deductible": 0,
+                "remediations": [
+                    {
+                        "control": "Enable Admin SDK API in Google Cloud Console",
+                        "impact": "Unlocks automated posture inspection across Google Workspace tenant",
+                        "action": "In Google Cloud Console (project 799321431260), navigate to 'APIs & Services > Library', search for 'Admin SDK API', and click 'Enable'. Then re-verify."
+                    }
+                ],
+                "credits": []
+            }
+        elif rbac_cause == "CONSUMER_ACCOUNT":
+            return {
+                "decision": "CONSUMER_ACCOUNT_INELIGIBLE",
+                "tier": "CONSUMER_GMAIL",
+                "tier_display": "Action Required: Corporate Domain Required",
+                "status_color": "#DC2626",
+                "summary": f"Underwriting verification halted: Authenticated account '{user_account}' is a personal consumer account (@gmail.com). Commercial cyber insurance underwriting requires an organization-managed Google Workspace corporate domain with administrative security policies.",
+                "base_premium": base_annual_premium,
+                "total_discount_pct": 0.0,
+                "discount_amount": 0.0,
+                "final_annual_premium": None,
+                "final_monthly_premium": None,
+                "coverage_limit": 0,
+                "deductible": 0,
+                "remediations": [
+                    {
+                        "control": "Authenticate with Corporate Google Workspace Account",
+                        "impact": "Enables corporate security telemetry verification",
+                        "action": "Sign out and re-verify using your corporate domain account (e.g. admin@yourdomain.com) rather than a personal @gmail.com address."
+                    }
+                ],
+                "credits": []
+            }
+        else:
+            return {
+                "decision": "INSUFFICIENT_DELEGATION",
+                "tier": "UNVERIFIED_ROLE",
+                "tier_display": "Action Required: Delegated Admin Role Required",
+                "status_color": "#DC2626",
+                "summary": f"Automated underwriting halted: Account '{user_account}' is a Standard User lacking Delegated Admin privileges in Google Workspace. Google Workspace RBAC blocked access (HTTP 403) to domain-wide MFA, endpoint, and user posture. Real-time underwriting requires an administrator role.",
+                "base_premium": base_annual_premium,
+                "total_discount_pct": 0.0,
+                "discount_amount": 0.0,
+                "final_annual_premium": None,
+                "final_monthly_premium": None,
+                "coverage_limit": 0,
+                "deductible": 0,
+                "remediations": [
+                    {
+                        "control": "Grant Delegated Security Auditor Role in Google Workspace",
+                        "impact": "Unlocks real-time underwriting verification and preferred rate tiering",
+                        "action": "In Google Workspace Admin Console (Security > Admin Roles), assign a custom read-only role with 'Users (Read)', 'Reports (Read)', and 'Mobile Device Management (Read)' to this account, or re-authenticate with an authorized Super Admin."
+                    }
+                ],
+                "credits": []
+            }
 
     # 1. Critical Hard Gate: Multi-Factor Authentication
     mfa_enforced = telemetry.get("mfa_enforced")

@@ -414,17 +414,20 @@
 
     <!-- ==================== VIEW 5: STEP 5 - THE CALL WALL VS BEACON (SLIDE 7) ==================== -->
     <section class="flow-view" id="viewStep5">
-      <div class="step5-container">
+      <div class="step5-container" id="step5Container">
 
-        <div style="text-align:center; margin-bottom:28px;">
-          <h2 style="font-size:30px; font-weight:800; color:#111827;">Cyber Underwriting &amp; Rating Decision</h2>
-          <p style="color:#4B5563; font-size:16px;">Comparing the traditional questionnaire drop-off vs. Project Beacon automated telemetry.</p>
-        </div>
+        <!-- ==================== PRE-CHECK COMPARISON VIEW (CALL WALL VS BEACON) ==================== -->
+        <div class="step5-precheck-view" id="step5PrecheckView">
 
-        <div class="step5-grid">
+          <div class="step5-heading-wrap" id="step5HeadingWrap" style="text-align:center; margin-bottom:24px;">
+            <h2 style="font-size:30px; font-weight:800; color:#111827;" id="step5MainTitle">Cyber Underwriting &amp; Rating Decision</h2>
+            <p style="color:#4B5563; font-size:16px;" id="step5SubTitle">Comparing the traditional questionnaire drop-off vs. Project Beacon automated telemetry.</p>
+          </div>
+
+          <div class="step5-grid" id="step5Grid">
 
           <!-- TRADITIONAL CURRENT PATH (MIRRORS SLIDE 7 EXACTLY) -->
-          <div class="traditional-card">
+          <div class="traditional-card" id="traditionalCard">
             <div class="call-icon">📞</div>
             <h3 class="call-title">Give us a call to finish your quote!</h3>
             <p class="call-desc">We think a quick phone call will help us get you the most accurate price and coverage for your business. We're looking forward to hearing from you!</p>
@@ -446,50 +449,54 @@
           </div>
 
           <!-- PROJECT BEACON FAST-TRACK -->
-          <div class="beacon-card">
+          <div class="beacon-card" id="beaconCard">
             <span class="beacon-tag">Project Beacon</span>
-            <div class="beacon-header">
-              <img src="/static/img/google_logo.svg" alt="Google" width="28">
-              <h3>Auto-Verify with Google Workspace</h3>
-            </div>
-            <p class="beacon-sub">
-              Skip the 40-question questionnaire and phone call! Connect your Google Workspace to evaluate your security posture in 10 seconds for an <strong>instant quote and up to 25% Preferred Risk discount</strong>.
-            </p>
 
-            <div class="beacon-pillars">
-              <div class="pillar-item">
-                <span class="pillar-icon">🔒</span>
-                <span>MFA (2SV) Enforced</span>
+            <!-- Pre-check Introductory Content (cleanly hidden once verified results arrive) -->
+            <div class="beacon-precheck-content" id="beaconPrecheckContent">
+              <div class="beacon-header">
+                <img src="/static/img/google_logo.svg" alt="Google" width="28">
+                <h3>Auto-Verify with Google Workspace</h3>
               </div>
-              <div class="pillar-item">
-                <span class="pillar-icon">✉️</span>
-                <span>SPF / DMARC Active</span>
-              </div>
-              <div class="pillar-item">
-                <span class="pillar-icon">🛡️</span>
-                <span>Cloud DLP Rules</span>
-              </div>
-              <div class="pillar-item">
-                <span class="pillar-icon">📦</span>
-                <span>Vault &amp; Retention</span>
-              </div>
-            </div>
+              <p class="beacon-sub">
+                Skip the 40-question questionnaire and phone call! Connect your Google Workspace to evaluate your security posture in 10 seconds for an <strong>instant quote and up to 25% Preferred Risk discount</strong>.
+              </p>
 
-            <!-- Transparency Link for Customers & IT Admins -->
-            <div class="step5-transparency-banner" onclick="openTransparencyModal('tabApis')">
-              <div style="font-size:22px;">🛡️</div>
-              <div style="text-align:left; flex:1;">
-                <strong style="color:#1E3A8A; font-size:13px; display:block;">Customer &amp; IT Admin Transparency Guide</strong>
-                <span style="font-size:11px; color:#475569;">Detailed breakdown of Google APIs queried, read-only permissions, and what is never accessed.</span>
+              <div class="beacon-pillars">
+                <div class="pillar-item">
+                  <span class="pillar-icon">🔒</span>
+                  <span>MFA (2SV) Enforced</span>
+                </div>
+                <div class="pillar-item">
+                  <span class="pillar-icon">✉️</span>
+                  <span>SPF / DMARC Active</span>
+                </div>
+                <div class="pillar-item">
+                  <span class="pillar-icon">🛡️</span>
+                  <span>Cloud DLP Rules</span>
+                </div>
+                <div class="pillar-item">
+                  <span class="pillar-icon">📦</span>
+                  <span>Vault &amp; Retention</span>
+                </div>
               </div>
-              <span class="btn-transparency-pill" style="font-size:11px;">View Guide →</span>
-            </div>
 
-            <!-- Auto-Verify Action Button -->
-            <button class="btn-google-verify" id="btnTriggerGoogleVerify" onclick="triggerGoogleOAuth()">
-              <img src="/static/img/google_logo.svg" alt="Google" width="20">
-              <span>Auto-Verify Security Posture</span>
-            </button>
+              <!-- Transparency Link for Customers & IT Admins -->
+              <div class="step5-transparency-banner" onclick="openTransparencyModal('tabApis')">
+                <div style="font-size:22px;">🛡️</div>
+                <div style="text-align:left; flex:1;">
+                  <strong style="color:#1E3A8A; font-size:13px; display:block;">Customer &amp; IT Admin Transparency Guide</strong>
+                  <span style="font-size:11px; color:#475569;">Detailed breakdown of Google APIs queried, read-only permissions, and what is never accessed.</span>
+                </div>
+                <span class="btn-transparency-pill" style="font-size:11px;">View Guide →</span>
+              </div>
+
+              <!-- Auto-Verify Action Button -->
+              <button class="btn-google-verify" id="btnTriggerGoogleVerify" onclick="triggerGoogleOAuth()">
+                <img src="/static/img/google_logo.svg" alt="Google" width="20">
+                <span>Auto-Verify Security Posture</span>
+              </button>
+            </div>
 
             <!-- Scanning State (Hidden by default) -->
             <div class="scan-progress-box" id="scanProgressBox">
@@ -514,331 +521,391 @@
               </div>
             </div>
 
-            <!-- Final Quote & Zero-Retention Receipt Card -->
-            <div class="quote-result-card" id="quoteResultCard">
-              <div class="quote-header-badge">
-                <div>
-                  <span class="badge-preferred" id="quoteTierBadge">PREFERRED RISK (Tier 1)</span>
-                  <div style="font-size:11px; color:#6B7280; margin-top:4px;">Decision: <strong id="quoteDecision">APPROVED INSTANTLY</strong></div>
-                </div>
-                <div style="text-align:right;">
-                  <div style="font-size:11px; color:#6B7280;">Coverage Limit</div>
-                  <div style="font-size:16px; font-weight:800; color:#111827;">$2,000,000 Aggregate</div>
-                </div>
+          </div> <!-- /beaconCard -->
+
+        </div> <!-- /step5Grid -->
+
+      </div> <!-- /step5PrecheckView -->
+
+      <!-- ==================== CLEANED-UP EXECUTIVE RESULTS DASHBOARD ==================== -->
+      <div class="step5-results-view" id="step5ResultsView" style="display:none;">
+
+        <!-- Clean Executive Header Bar -->
+        <div class="results-header-bar">
+          <div class="results-header-left">
+            <h2 class="results-header-title">Cyber Underwriting Determination</h2>
+            <div class="results-header-sub">
+              Verified via Authenticated Google Workspace Telemetry for <strong id="resultsDomainHeader">applicant domain</strong>
+            </div>
+          </div>
+          <div class="results-header-actions">
+            <button type="button" class="btn-results-action" onclick="openTraditionalModal()" title="View comparison against traditional phone questionnaire">
+              <span>📞</span>
+              <span>Compare Traditional Flow</span>
+            </button>
+            <button type="button" class="btn-results-action btn-results-action-primary" onclick="resetStep5ToPrecheck()" title="Re-check environment or change settings">
+              <span>🔄</span>
+              <span>Re-verify Posture</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="quote-result-card active" id="quoteResultCard">
+
+          <!-- Hero Section: Decision, Pricing & RBAC Identity (2-Column Grid) -->
+          <div class="quote-hero-grid">
+
+            <!-- Left: Determination, Pricing & Immediate Bind Action -->
+            <div class="quote-hero-left">
+              <div class="quote-hero-status-row">
+                <span class="badge-preferred" id="quoteTierBadge" style="display:none;">PREFERRED RISK (Tier 1)</span>
+                <span class="quote-decision-pill" id="quoteDecision">AWAITING VERIFICATION</span>
               </div>
 
-              <p id="quoteSummaryText" style="font-size:13px; color:#374151; margin-bottom:14px;">
-                Applicant verified with highest cyber security posture. Instant policy issuance approved at 25% Preferred Risk discount.
+              <p id="quoteSummaryText" class="quote-summary-text">
+                Connect Google Workspace to verify security controls in real time, or review public DNS indicators.
               </p>
 
               <div class="pricing-display">
                 <div>
                   <div class="pricing-item-label">Annual Premium</div>
-                  <div class="pricing-item-val" id="quoteAnnualPrice">$6,375<span style="font-size:14px; font-weight:500;">/yr</span></div>
-                  <div class="pricing-discount-tag" id="quoteDiscountPct">Saved 25% (-$2,125)</div>
+                  <div class="pricing-item-val" id="quoteAnnualPrice">—</div>
+                  <div class="pricing-discount-tag" id="quoteDiscountPct" style="display:none;"></div>
                 </div>
                 <div>
                   <div class="pricing-item-label">Monthly Rate</div>
-                  <div class="pricing-item-val" id="quoteMonthlyPrice">$531<span style="font-size:14px; font-weight:500;">/mo</span></div>
-                  <div style="font-size:11px; color:#6B7280; margin-top:4px;">Deductible: $5,000</div>
+                  <div class="pricing-item-val" id="quoteMonthlyPrice">—</div>
+                  <div class="pricing-subtext">Coverage: <strong>$2,000,000 Limit</strong> | $5,000 Ded.</div>
                 </div>
               </div>
 
-              <!-- Verified Security Findings & Decision Breakdown -->
-              <div class="findings-inspector" id="findingsInspector">
-                <div class="findings-inspector-header">
-                  <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:18px;">📋</span>
-                    <div>
-                      <h4 style="font-size:14px; font-weight:800; color:#1E293B; margin:0;">Verified Security Findings &amp; Underwriting Explanation</h4>
-                      <span style="font-size:11px; color:#64748B;">Live Workspace telemetry &amp; DNS evaluated for <strong id="findingsDomainName">applicant domain</strong></span>
-                    </div>
-                  </div>
-                  <span class="findings-source-badge" id="findingsSourceBadge">Live Google Telemetry</span>
-                </div>
-
-                <!-- Google Workspace Identity & Delegated Role Banner -->
-                <div class="delegation-banner" id="delegationBanner" style="display:flex; align-items:center; justify-content:space-between; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:10px 14px; margin-bottom:14px;">
-                  <div style="display:flex; align-items:center; gap:10px;">
-                    <span style="font-size:20px;" id="delegationIcon">🛡️</span>
-                    <div>
-                      <div style="font-size:12px; font-weight:700; color:#1E293B;" id="delegationTitle">Authenticated Account: <span id="delegationAccount" style="font-family:monospace; font-weight:600;">user@domain.com</span></div>
-                      <div style="font-size:11px; color:#64748B;" id="delegationSubtitle">Google Workspace RBAC: Delegated Admin Verified</div>
-                    </div>
-                  </div>
-                  <span class="finding-pill" id="delegationPill" style="font-size:11px;">DELEGATED ADMIN</span>
-                </div>
-
-                <!-- 8 Controls Grid -->
-                <div class="findings-grid">
-
-                  <!-- 1. MFA / 2SV -->
-                  <div class="finding-card" id="cardMfa">
-                    <div class="finding-card-header">
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="finding-card-icon">🔒</span>
-                        <strong class="finding-card-title">2-Step Verification (MFA)</strong>
-                      </div>
-                      <span class="finding-pill" id="pillMfa">VERIFYING</span>
-                    </div>
-                    <div class="finding-observed">
-                      <span class="label">Observed:</span>
-                      <span class="value" id="valMfa">-</span>
-                    </div>
-                    <div class="finding-explanation" id="explMfa">-</div>
-                    <div class="finding-impact" id="impactMfa">-</div>
-                  </div>
-
-                  <!-- 2. DMARC / SPF -->
-                  <div class="finding-card" id="cardDmarc">
-                    <div class="finding-card-header">
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="finding-card-icon">✉️</span>
-                        <strong class="finding-card-title">Email Spoofing (DMARC/SPF)</strong>
-                      </div>
-                      <span class="finding-pill" id="pillDmarc">VERIFYING</span>
-                    </div>
-                    <div class="finding-observed">
-                      <span class="label">Observed:</span>
-                      <span class="value" id="valDmarc">-</span>
-                    </div>
-                    <div class="finding-explanation" id="explDmarc">-</div>
-                    <div class="finding-impact" id="impactDmarc">-</div>
-                  </div>
-
-                  <!-- 3. Super Admin Count (Least Privilege) -->
-                  <div class="finding-card" id="cardAdmin">
-                    <div class="finding-card-header">
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="finding-card-icon">👥</span>
-                        <strong class="finding-card-title">Super Admin Least-Privilege</strong>
-                      </div>
-                      <span class="finding-pill" id="pillAdmin">VERIFYING</span>
-                    </div>
-                    <div class="finding-observed">
-                      <span class="label">Observed:</span>
-                      <span class="value" id="valAdmin">-</span>
-                    </div>
-                    <div class="finding-explanation" id="explAdmin">-</div>
-                    <div class="finding-impact" id="impactAdmin">-</div>
-                  </div>
-
-                  <!-- 4. Device Fleet & Full Disk Encryption -->
-                  <div class="finding-card" id="cardDevice">
-                    <div class="finding-card-header">
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="finding-card-icon">💻</span>
-                        <strong class="finding-card-title">Device Fleet &amp; Encryption</strong>
-                      </div>
-                      <span class="finding-pill" id="pillDevice">VERIFYING</span>
-                    </div>
-                    <div class="finding-observed">
-                      <span class="label">Observed:</span>
-                      <span class="value" id="valDevice">-</span>
-                    </div>
-                    <div class="finding-explanation" id="explDevice">-</div>
-                    <div class="finding-impact" id="impactDevice">-</div>
-                  </div>
-
-                  <!-- 5. Cloud Mail Gateway & DKIM -->
-                  <div class="finding-card" id="cardMx">
-                    <div class="finding-card-header">
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="finding-card-icon">🌐</span>
-                        <strong class="finding-card-title">Mail Gateway &amp; DKIM</strong>
-                      </div>
-                      <span class="finding-pill" id="pillMx">VERIFYING</span>
-                    </div>
-                    <div class="finding-observed">
-                      <span class="label">Observed:</span>
-                      <span class="value" id="valMx">-</span>
-                    </div>
-                    <div class="finding-explanation" id="explMx">-</div>
-                    <div class="finding-impact" id="impactMx">-</div>
-                  </div>
-
-                  <!-- 6. Cloud DLP -->
-                  <div class="finding-card" id="cardDlp">
-                    <div class="finding-card-header">
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="finding-card-icon">🛡️</span>
-                        <strong class="finding-card-title">Cloud Data Loss Prevention</strong>
-                      </div>
-                      <span class="finding-pill" id="pillDlp">VERIFYING</span>
-                    </div>
-                    <div class="finding-observed">
-                      <span class="label">Observed:</span>
-                      <span class="value" id="valDlp">-</span>
-                    </div>
-                    <div class="finding-explanation" id="explDlp">-</div>
-                    <div class="finding-impact" id="impactDlp">-</div>
-                  </div>
-
-                  <!-- 7. Google Vault Retention -->
-                  <div class="finding-card" id="cardVault">
-                    <div class="finding-card-header">
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="finding-card-icon">📦</span>
-                        <strong class="finding-card-title">Google Vault &amp; Retention</strong>
-                      </div>
-                      <span class="finding-pill" id="pillVault">VERIFYING</span>
-                    </div>
-                    <div class="finding-observed">
-                      <span class="label">Observed:</span>
-                      <span class="value" id="valVault">-</span>
-                    </div>
-                    <div class="finding-explanation" id="explVault">-</div>
-                    <div class="finding-impact" id="impactVault">-</div>
-                  </div>
-
-                  <!-- 8. Headcount & Offboarding Hygiene -->
-                  <div class="finding-card" id="cardUsers">
-                    <div class="finding-card-header">
-                      <div style="display:flex; align-items:center; gap:6px;">
-                        <span class="finding-card-icon">👤</span>
-                        <strong class="finding-card-title">Headcount &amp; Offboarding</strong>
-                      </div>
-                      <span class="finding-pill" id="pillUsers">VERIFYING</span>
-                    </div>
-                    <div class="finding-observed">
-                      <span class="label">Observed:</span>
-                      <span class="value" id="valUsers">-</span>
-                    </div>
-                    <div class="finding-explanation" id="explUsers">-</div>
-                    <div class="finding-impact" id="impactUsers">-</div>
-                  </div>
-
-                </div>
-
-                <!-- Remediation & Savings Opportunities Box (Shown when not 100% preferred) -->
-                <div class="remediation-box" id="remediationBox" style="display:none;">
-                  <div class="remediation-title">
-                    <span>💡 Actionable Steps to Improve Your Rating &amp; Rate:</span>
-                  </div>
-                  <div class="remediation-items" id="remediationItemsList"></div>
-                </div>
-
-                <!-- Collapsible Raw Telemetry & Customer Data Inspection -->
-                <details class="raw-inspector-details">
-                  <summary class="raw-inspector-summary">
-                    <span style="font-weight:700;">🔍 Inspect Raw Telemetry Data &amp; DNS Records</span>
-                    <span style="font-size:11px; color:#2563EB;">Click to view / copy your data</span>
-                  </summary>
-                  <div class="raw-inspector-body">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                      <span style="font-size:11px; color:#475569; font-weight:600;">Verified Account: <strong id="rawVerifiedAccount" style="color:#0F172A;">-</strong></span>
-                      <button type="button" class="btn-copy-raw" id="btnCopyRawTelemetry" onclick="copyTelemetryData()">
-                        📋 Copy Raw Telemetry JSON
-                      </button>
-                    </div>
-                    <pre class="raw-json-display" id="rawJsonDisplay"></pre>
-
-                    <div id="rawAuditLogContainer" style="margin-top:10px;">
-                      <div style="font-size:11px; font-weight:700; color:#1E293B; margin-bottom:4px;">Google API Query Audit Trail:</div>
-                      <ul class="raw-audit-list" id="rawAuditList"></ul>
-                    </div>
-                  </div>
-                </details>
-
-              </div>
-
-              <!-- Underwriter Threat Intelligence Assessment Panel (Mandiant API) -->
-              <div class="uw-intel-panel" id="underwriterIntelPanel" style="display:none;">
-                <div class="uw-intel-header">
-                  <div class="uw-intel-title-group">
-                    <span style="font-size:22px;">🎯</span>
-                    <div>
-                      <div style="display:flex; align-items:center; gap:8px;">
-                        <strong style="font-size:14px; color:#0F172A;">Underwriter Threat Intelligence Correlation</strong>
-                        <span class="uw-mandiant-tag">Mandiant Live Feed</span>
-                      </div>
-                      <span style="font-size:11px; color:#64748B;">Live cross-correlation: Verified applicant controls vs. sector-active attack vectors</span>
-                    </div>
-                  </div>
-                  <div class="uw-sector-selector-wrap">
-                    <label for="uwSectorSelect" style="font-size:11px; font-weight:700; color:#475569;">Industry Profile:</label>
-                    <select id="uwSectorSelect" class="uw-sector-select" onchange="handleUnderwriterSectorChange(this.value)">
-                      <option value="legal_accounting">Legal &amp; Professional Services</option>
-                      <option value="healthcare">Healthcare &amp; Clinical Networks</option>
-                      <option value="financial_services">Financial Services &amp; Wealth Tech</option>
-                      <option value="retail_hospitality">Retail, eCommerce &amp; Hospitality</option>
-                      <option value="technology_saas">B2B SaaS &amp; Cloud Software</option>
-                    </select>
-                  </div>
-                </div>
-
-                <!-- Sector Threat Banner -->
-                <div class="uw-threat-banner" id="uwThreatBanner">
-                  <div>
-                    <div class="uw-threat-stat-label">Sector Hazard Rating</div>
-                    <div class="uw-threat-stat-val" id="uwStatHazard">-</div>
-                  </div>
-                  <div>
-                    <div class="uw-threat-stat-label">Active Sector Threat Actors</div>
-                    <div class="uw-threat-stat-val" id="uwStatActors" style="font-size:11px; line-height:1.4;">-</div>
-                  </div>
-                  <div>
-                    <div class="uw-threat-stat-label">Campaign Velocity &amp; Surge</div>
-                    <div class="uw-threat-stat-val" id="uwStatVelocity" style="font-size:12px;">-</div>
-                  </div>
-                </div>
-
-                <!-- Threat Defense Fit Scorecards -->
-                <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                  <span style="font-size:12px; font-weight:700; color:#334155;">Sector Threat Vector Exposure vs. Verified Controls:</span>
-                  <a href="javascript:void(0)" onclick="openTransparencyModal('tabThreatIntel')" style="font-size:11px; font-weight:700; color:#0284C7; text-decoration:underline;">
-                    Explore Mandiant API Feed →
-                  </a>
-                </div>
-                <div class="uw-scorecard-list" id="uwScorecardList">
-                  <!-- Populated dynamically via JS -->
-                </div>
-
-                <!-- Underwriter Sublimit & Binding Verdict Card -->
-                <div class="uw-verdict-card" id="uwVerdictCard">
-                  <div style="flex:1;">
-                    <div style="font-size:10px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">
-                      Actuarial Underwriting Determination
-                    </div>
-                    <div style="font-size:15px; font-weight:800; color:#0F172A; margin-bottom:4px;" id="uwSublimitAction">
-                      -
-                    </div>
-                    <div style="font-size:12px; color:#334155; line-height:1.4;" id="uwVerdictRec">
-                      -
-                    </div>
-                  </div>
-                  <div class="uw-fit-meter">
-                    <div class="uw-fit-score" id="uwFitScore">-</div>
-                    <div class="uw-fit-label">Threat-Defense Fit</div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Instant Bind Action -->
-              <button class="btn-next" id="btnBindPolicy" style="width:100%; padding:14px; font-size:16px; background-color:var(--hartford-maroon);" onclick="bindPolicy()">
+              <!-- Primary Bind CTA Button (Prominently placed right below pricing) -->
+              <button class="btn-bind-policy-hero" id="btnBindPolicy" onclick="bindPolicy()">
                 Bind Policy &amp; Download Binder
               </button>
+            </div>
 
-              <!-- Customer & IT Audit Transparency Callout -->
-              <div class="quote-guide-callout" onclick="openTransparencyModal('tabApis')">
+            <!-- Right: Identity Governance, Quick Posture KPIs & Zero-Retention Preview -->
+            <div class="quote-hero-right">
+              <!-- Google Workspace Identity & Delegated Role Banner -->
+              <div class="delegation-banner" id="delegationBanner">
                 <div style="display:flex; align-items:center; gap:10px;">
-                  <span style="font-size:20px;">🛡️</span>
+                  <span style="font-size:24px;" id="delegationIcon">🌐</span>
                   <div>
-                    <strong style="font-size:12px; color:#0F766E; display:block;">Customer Questions: What Did Our APIs Just Verify?</strong>
-                    <span style="font-size:11px; color:#475569;">See full technical breakdown of the 4 Google Workspace APIs inspected and zero data retention proof.</span>
+                    <div style="font-size:13px; font-weight:700; color:#1E293B;" id="delegationTitle">
+                      Account: <span id="delegationAccount" style="font-family:monospace; font-weight:600;">—</span>
+                    </div>
+                    <div style="font-size:11px; color:#64748B;" id="delegationSubtitle">Awaiting Authentication</div>
                   </div>
                 </div>
-                <span style="color:#0F766E; font-size:12px; font-weight:800; white-space:nowrap;">Open Guide →</span>
+                <span class="finding-pill pill-neutral" id="delegationPill" style="font-size:11px;">PENDING</span>
               </div>
 
+              <!-- Quick Posture KPIs -->
+              <div class="posture-kpi-row">
+                <div class="posture-kpi-item" onclick="switchResultsTab('tabSecurityControls')" title="Click to view Controls tab">
+                  <div class="kpi-label">Controls Evaluated</div>
+                  <div class="kpi-value" id="kpiControlsCount">—</div>
+                  <div class="kpi-tag kpi-tag-opt" id="kpiControlsTag">—</div>
+                </div>
+                <div class="posture-kpi-item" onclick="switchResultsTab('tabUnderwriterIntel')" title="Click to view Mandiant tab">
+                  <div class="kpi-label">Threat-Defense Fit</div>
+                  <div class="kpi-value" id="kpiThreatScore">—</div>
+                  <div class="kpi-tag kpi-tag-opt" id="kpiThreatTag">—</div>
+                </div>
+                <div class="posture-kpi-item" onclick="switchResultsTab('tabAuditProof')" title="Click to view Audit tab">
+                  <div class="kpi-label">Data Retention</div>
+                  <div class="kpi-value">0 Bytes Stored</div>
+                  <div class="kpi-tag kpi-tag-crypto">Ephemeral</div>
+                </div>
+              </div>
+
+              <!-- Compact Attestation Preview Box -->
+              <div class="hero-attestation-compact">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                  <span style="font-size:11px; font-weight:700; color:#0F766E;">🛡️ Zero-Retention Proof Attestation</span>
+                  <a href="javascript:void(0)" onclick="switchResultsTab('tabAuditProof')" style="font-size:11px; font-weight:700; color:#0F766E; text-decoration:underline;">
+                    View API Log &amp; Hash →
+                  </a>
+                </div>
+                <div style="font-size:11px; font-family:monospace; color:#334155; word-break:break-all;">
+                  Token: <strong id="attestToken">—</strong> | Fingerprint: <span id="attestHash">—</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Clean Detail Tabs Navigation -->
+          <div class="results-tab-nav">
+            <button type="button" class="results-tab-btn active" data-tab="tabSecurityControls" onclick="switchResultsTab('tabSecurityControls')">
+              <span class="tab-icon">🛡️</span>
+              <span class="tab-label">Verified Security Controls (8)</span>
+            </button>
+            <button type="button" class="results-tab-btn" data-tab="tabUnderwriterIntel" onclick="switchResultsTab('tabUnderwriterIntel')">
+              <span class="tab-icon">🎯</span>
+              <span class="tab-label">Underwriter Risk Portal</span>
+              <span class="tab-badge-mandiant">Mandiant Live Feed</span>
+            </button>
+            <button type="button" class="results-tab-btn" data-tab="tabAuditProof" onclick="switchResultsTab('tabAuditProof')">
+              <span class="tab-icon">🔒</span>
+              <span class="tab-label">Zero-Retention &amp; API Audit</span>
+              <span class="tab-badge-crypto">SHA-256</span>
+            </button>
+          </div>
+
+          <!-- TAB PANES -->
+
+          <!-- PANE 1: Security Controls (8 Cards) + Remediation -->
+          <div class="results-tab-pane active" id="tabSecurityControls">
+            <div class="findings-inspector" id="findingsInspector">
+              <div class="findings-inspector-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:18px;">📋</span>
+                  <div>
+                    <h4 style="font-size:14px; font-weight:800; color:#1E293B; margin:0;">Verified Security Findings &amp; Underwriting Explanation</h4>
+                    <span style="font-size:11px; color:#64748B;">Live Workspace telemetry &amp; DNS evaluated for <strong id="findingsDomainName">applicant domain</strong></span>
+                  </div>
+                </div>
+                <span class="findings-source-badge" id="findingsSourceBadge">Live Google Telemetry</span>
+              </div>
+
+              <!-- Remediation & Savings Opportunities Box (Shown when recommendations exist) -->
+              <div class="remediation-box" id="remediationBox" style="display:none;">
+                <div class="remediation-title">
+                  <span>💡 Actionable Steps to Improve Your Rating &amp; Rate:</span>
+                </div>
+                <div class="remediation-items" id="remediationItemsList"></div>
+              </div>
+
+              <!-- 8 Controls Grid -->
+              <div class="findings-grid">
+
+                <!-- 1. MFA / 2SV -->
+                <div class="finding-card" id="cardMfa">
+                  <div class="finding-card-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="finding-card-icon">🔒</span>
+                      <strong class="finding-card-title">2-Step Verification (MFA)</strong>
+                    </div>
+                    <span class="finding-pill" id="pillMfa">VERIFYING</span>
+                  </div>
+                  <div class="finding-observed">
+                    <span class="label">Observed:</span>
+                    <span class="value" id="valMfa">-</span>
+                  </div>
+                  <div class="finding-explanation" id="explMfa">-</div>
+                  <div class="finding-impact" id="impactMfa">-</div>
+                </div>
+
+                <!-- 2. DMARC / SPF -->
+                <div class="finding-card" id="cardDmarc">
+                  <div class="finding-card-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="finding-card-icon">✉️</span>
+                      <strong class="finding-card-title">Email Spoofing (DMARC/SPF)</strong>
+                    </div>
+                    <span class="finding-pill" id="pillDmarc">VERIFYING</span>
+                  </div>
+                  <div class="finding-observed">
+                    <span class="label">Observed:</span>
+                    <span class="value" id="valDmarc">-</span>
+                  </div>
+                  <div class="finding-explanation" id="explDmarc">-</div>
+                  <div class="finding-impact" id="impactDmarc">-</div>
+                </div>
+
+                <!-- 3. Super Admin Count (Least Privilege) -->
+                <div class="finding-card" id="cardAdmin">
+                  <div class="finding-card-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="finding-card-icon">👥</span>
+                      <strong class="finding-card-title">Super Admin Least-Privilege</strong>
+                    </div>
+                    <span class="finding-pill" id="pillAdmin">VERIFYING</span>
+                  </div>
+                  <div class="finding-observed">
+                    <span class="label">Observed:</span>
+                    <span class="value" id="valAdmin">-</span>
+                  </div>
+                  <div class="finding-explanation" id="explAdmin">-</div>
+                  <div class="finding-impact" id="impactAdmin">-</div>
+                </div>
+
+                <!-- 4. Device Fleet & Full Disk Encryption -->
+                <div class="finding-card" id="cardDevice">
+                  <div class="finding-card-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="finding-card-icon">💻</span>
+                      <strong class="finding-card-title">Device Fleet &amp; Encryption</strong>
+                    </div>
+                    <span class="finding-pill" id="pillDevice">VERIFYING</span>
+                  </div>
+                  <div class="finding-observed">
+                    <span class="label">Observed:</span>
+                    <span class="value" id="valDevice">-</span>
+                  </div>
+                  <div class="finding-explanation" id="explDevice">-</div>
+                  <div class="finding-impact" id="impactDevice">-</div>
+                </div>
+
+                <!-- 5. Cloud Mail Gateway & DKIM -->
+                <div class="finding-card" id="cardMx">
+                  <div class="finding-card-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="finding-card-icon">🌐</span>
+                      <strong class="finding-card-title">Mail Gateway &amp; DKIM</strong>
+                    </div>
+                    <span class="finding-pill" id="pillMx">VERIFYING</span>
+                  </div>
+                  <div class="finding-observed">
+                    <span class="label">Observed:</span>
+                    <span class="value" id="valMx">-</span>
+                  </div>
+                  <div class="finding-explanation" id="explMx">-</div>
+                  <div class="finding-impact" id="impactMx">-</div>
+                </div>
+
+                <!-- 6. Cloud DLP -->
+                <div class="finding-card" id="cardDlp">
+                  <div class="finding-card-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="finding-card-icon">🛡️</span>
+                      <strong class="finding-card-title">Cloud Data Loss Prevention</strong>
+                    </div>
+                    <span class="finding-pill" id="pillDlp">VERIFYING</span>
+                  </div>
+                  <div class="finding-observed">
+                    <span class="label">Observed:</span>
+                    <span class="value" id="valDlp">-</span>
+                  </div>
+                  <div class="finding-explanation" id="explDlp">-</div>
+                  <div class="finding-impact" id="impactDlp">-</div>
+                </div>
+
+                <!-- 7. Google Vault Retention -->
+                <div class="finding-card" id="cardVault">
+                  <div class="finding-card-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="finding-card-icon">📦</span>
+                      <strong class="finding-card-title">Google Vault &amp; Retention</strong>
+                    </div>
+                    <span class="finding-pill" id="pillVault">VERIFYING</span>
+                  </div>
+                  <div class="finding-observed">
+                    <span class="label">Observed:</span>
+                    <span class="value" id="valVault">-</span>
+                  </div>
+                  <div class="finding-explanation" id="explVault">-</div>
+                  <div class="finding-impact" id="impactVault">-</div>
+                </div>
+
+                <!-- 8. Headcount & Offboarding Hygiene -->
+                <div class="finding-card" id="cardUsers">
+                  <div class="finding-card-header">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="finding-card-icon">👤</span>
+                      <strong class="finding-card-title">Headcount &amp; Offboarding</strong>
+                    </div>
+                    <span class="finding-pill" id="pillUsers">VERIFYING</span>
+                  </div>
+                  <div class="finding-observed">
+                    <span class="label">Observed:</span>
+                    <span class="value" id="valUsers">-</span>
+                  </div>
+                  <div class="finding-explanation" id="explUsers">-</div>
+                  <div class="finding-impact" id="impactUsers">-</div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- PANE 2: Underwriter Threat Intelligence Assessment Panel (Mandiant API) -->
+          <div class="results-tab-pane" id="tabUnderwriterIntel">
+            <div class="uw-intel-panel" id="underwriterIntelPanel">
+              <div class="uw-intel-header">
+                <div class="uw-intel-title-group">
+                  <span style="font-size:22px;">🎯</span>
+                  <div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                      <strong style="font-size:14px; color:#0F172A;">Underwriter Threat Intelligence Correlation</strong>
+                      <span class="uw-mandiant-tag">Mandiant Live Feed</span>
+                    </div>
+                    <span style="font-size:11px; color:#64748B;">Live cross-correlation: Verified applicant controls vs. sector-active attack vectors</span>
+                  </div>
+                </div>
+                <div class="uw-sector-selector-wrap">
+                  <label for="uwSectorSelect" style="font-size:11px; font-weight:700; color:#475569;">Industry Profile:</label>
+                  <select id="uwSectorSelect" class="uw-sector-select" onchange="handleUnderwriterSectorChange(this.value)">
+                    <option value="legal_accounting">Legal &amp; Professional Services</option>
+                    <option value="healthcare">Healthcare &amp; Clinical Networks</option>
+                    <option value="financial_services">Financial Services &amp; Wealth Tech</option>
+                    <option value="retail_hospitality">Retail, eCommerce &amp; Hospitality</option>
+                    <option value="technology_saas">B2B SaaS &amp; Cloud Software</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Sector Threat Banner -->
+              <div class="uw-threat-banner" id="uwThreatBanner">
+                <div>
+                  <div class="uw-threat-stat-label">Sector Hazard Rating</div>
+                  <div class="uw-threat-stat-val" id="uwStatHazard">-</div>
+                </div>
+                <div>
+                  <div class="uw-threat-stat-label">Active Sector Threat Actors</div>
+                  <div class="uw-threat-stat-val" id="uwStatActors" style="font-size:11px; line-height:1.4;">-</div>
+                </div>
+                <div>
+                  <div class="uw-threat-stat-label">Campaign Velocity &amp; Surge</div>
+                  <div class="uw-threat-stat-val" id="uwStatVelocity" style="font-size:12px;">-</div>
+                </div>
+              </div>
+
+              <!-- Threat Defense Fit Scorecards -->
+              <div style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; font-weight:700; color:#334155;">Sector Threat Vector Exposure vs. Verified Controls:</span>
+                <a href="javascript:void(0)" onclick="openTransparencyModal('tabThreatIntel')" style="font-size:11px; font-weight:700; color:#0284C7; text-decoration:underline;">
+                  Explore Mandiant API Feed →
+                </a>
+              </div>
+              <div class="uw-scorecard-list" id="uwScorecardList">
+                <!-- Populated dynamically via JS -->
+              </div>
+
+              <!-- Underwriter Sublimit & Binding Verdict Card -->
+              <div class="uw-verdict-card" id="uwVerdictCard">
+                <div style="flex:1;">
+                  <div style="font-size:10px; font-weight:800; color:#64748B; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px;">
+                    Actuarial Underwriting Determination
+                  </div>
+                  <div style="font-size:15px; font-weight:800; color:#0F172A; margin-bottom:4px;" id="uwSublimitAction">
+                    -
+                  </div>
+                  <div style="font-size:12px; color:#334155; line-height:1.4;" id="uwVerdictRec">
+                    -
+                  </div>
+                </div>
+                <div class="uw-fit-meter">
+                  <div class="uw-fit-score" id="uwFitScore">-</div>
+                  <div class="uw-fit-label">Threat-Defense Fit</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- PANE 3: Zero-Retention Proof, Raw Telemetry & API Audit -->
+          <div class="results-tab-pane" id="tabAuditProof">
+            <div class="audit-proof-card" style="background:#FFFFFF; border:1px solid #E2E8F0; border-radius:12px; padding:20px;">
               <!-- Zero-Retention Attestation Receipt -->
-              <div class="attestation-receipt">
+              <div class="attestation-receipt" style="margin-top:0;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-weight:bold; color:#0F766E;">
                   <span>🛡️ ZERO-RETENTION PROOF ATTESTATION</span>
                   <span>STATUS: EPHEMERAL DISCARD</span>
                 </div>
-                <div>Token: <span id="attestToken">hig_gcp_attest_7f8a9...</span></div>
-                <div>SHA-256 Fingerprint: <span id="attestHash">b43c8d19...</span></div>
+                <div>Token: <span id="attestTokenFull" style="font-weight:700;">—</span></div>
+                <div>SHA-256 Fingerprint: <span id="attestHashFull">—</span></div>
                 <div style="margin-top:4px; color:#64748B;">No employee records or raw IT logs retained. Ephemerally processed under SOC2/ISO 27001 zero-retention rules.</div>
                 <div style="margin-top:6px; text-align:right;">
                   <a href="javascript:void(0)" onclick="openTransparencyModal('tabCrypto')" style="color:#0F766E; font-size:11px; font-weight:700; text-decoration:underline;">
@@ -846,13 +913,51 @@
                   </a>
                 </div>
               </div>
-            </div>
 
+              <!-- Google API Query Audit Trail -->
+              <div id="rawAuditLogContainer" style="margin-top:16px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; padding:14px;">
+                <div style="font-size:12px; font-weight:800; color:#1E293B; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                  <span>📋</span> Google API Query Audit Trail (Read-Only Endpoints):
+                </div>
+                <ul class="raw-audit-list" id="rawAuditList" style="margin:0; padding-left:20px;"></ul>
+              </div>
+
+              <!-- Raw Telemetry Inspection -->
+              <details class="raw-inspector-details" open style="margin-top:16px;">
+                <summary class="raw-inspector-summary">
+                  <span style="font-weight:700;">🔍 Inspect Raw Evaluated Telemetry Payload</span>
+                  <span style="font-size:11px; color:#2563EB;">Verified Account: <strong id="rawVerifiedAccount">-</strong></span>
+                </summary>
+                <div class="raw-inspector-body">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-size:11px; color:#64748B;">Ephemeral in-memory evaluation payload:</span>
+                    <button type="button" class="btn-copy-raw" id="btnCopyRawTelemetry" onclick="copyTelemetryData()">
+                      📋 Copy Raw Telemetry JSON
+                    </button>
+                  </div>
+                  <pre class="raw-json-display" id="rawJsonDisplay"></pre>
+                </div>
+              </details>
+
+              <!-- Customer & IT Audit Transparency Callout -->
+              <div class="quote-guide-callout" onclick="openTransparencyModal('tabApis')" style="margin-top:16px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <span style="font-size:20px;">🛡️</span>
+                  <div>
+                    <strong style="font-size:12px; color:#0F766E; display:block;">Customer Questions: What Did Our APIs Just Verify?</strong>
+                    <span style="font-size:11px; color:#475569;">See full technical breakdown of the Google Workspace APIs inspected and zero data retention proof.</span>
+                  </div>
+                </div>
+                <span style="color:#0F766E; font-size:12px; font-weight:800; white-space:nowrap;">Open Guide →</span>
+              </div>
+            </div>
           </div>
 
-        </div>
+        </div> <!-- /quoteResultCard -->
 
-      </div>
+      </div> <!-- /step5ResultsView -->
+
+      </div> <!-- /step5Container -->
     </section>
 
   </main>
@@ -916,6 +1021,18 @@
             <div>
               <strong style="color:#991B1B;">🔴 Vulnerable Retailer</strong>
               <div style="font-size:11px; color:#6B7280;">No MFA, missing DMARC → Declined (High Ransomware Risk)</div>
+            </div>
+          </button>
+          <button class="radio-option" style="text-align:left;" onclick="loadDemoScenario('gcp-api-disabled.demo')">
+            <div>
+              <strong style="color:#D97706;">🔧 GCP Project API Disabled (HTTP 403)</strong>
+              <div style="font-size:11px; color:#6B7280;">Admin SDK API disabled in GCP project 799321431260 → Action Required (Not a decline)</div>
+            </div>
+          </button>
+          <button class="radio-option" style="text-align:left;" onclick="loadDemoScenario('standard-user-rbac.demo')">
+            <div>
+              <strong style="color:#DC2626;">🔒 Standard User RBAC Gate (HTTP 403)</strong>
+              <div style="font-size:11px; color:#6B7280;">Account lacks Delegated Admin role in Workspace → Action Required (Not a decline)</div>
             </div>
           </button>
         </div>
@@ -1303,6 +1420,76 @@
 
         </div>
 
+      </div>
+  <!-- ==================== TRADITIONAL CALL WALL VS BEACON COMPARISON MODAL ==================== -->
+  <div class="modal-overlay" id="traditionalComparisonModal" style="display:none;" onclick="if(event.target===this) closeTraditionalModal()">
+    <div class="traditional-modal" onclick="event.stopPropagation()">
+      <div class="traditional-modal-header">
+        <h3>
+          <span>⚖️</span> Underwriting Comparison: Traditional vs. Project Beacon
+        </h3>
+        <button type="button" class="btn-close-modal" onclick="closeTraditionalModal()">✕</button>
+      </div>
+      <div class="traditional-modal-body">
+        <p style="font-size:13px; color:#475569; margin-bottom:16px;">
+          Comparing the status-quo manual cyber underwriting friction against Project Beacon’s real-time authenticated telemetry.
+        </p>
+        <div class="comparison-table-wrap">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>Underwriting Dimension</th>
+                <th class="col-trad">📞 Traditional Call Flow</th>
+                <th class="col-beacon">⚡ Project Beacon Fast-Track</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Turnaround Speed</strong></td>
+                <td class="text-fail">5 to 7 Business Days</td>
+                <td class="text-pass"><strong>3.2 Seconds (Instant Issuance)</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Applicant Friction</strong></td>
+                <td class="text-fail">45-question manual technical form + 30-min phone call</td>
+                <td class="text-pass"><strong>0 questions (OAuth Read-Only API check)</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Data Reliability</strong></td>
+                <td class="text-warn">Self-attested honor system (high dispute rate on breach)</td>
+                <td class="text-pass"><strong>Live Google Workspace API &amp; DNS verification</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Annual Premium Rate</strong></td>
+                <td>$8,500 / year (Standard Rate)</td>
+                <td class="text-pass"><strong>$6,375 / year (Saved 25% / -$2,125)</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Applicant Drop-Off</strong></td>
+                <td class="text-fail">70%+ SMB abandon at the call wall</td>
+                <td class="text-pass"><strong>Instant policy binding &amp; binder download</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Data Retention Risk</strong></td>
+                <td>Sensitive IT architecture logs stored in carrier database</td>
+                <td class="text-pass"><strong>Zero-Retention (Ephemeral in-memory evaluation)</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Underwriter Insight</strong></td>
+                <td class="text-warn">Static underwriting guidelines</td>
+                <td class="text-pass"><strong>Mandiant Threat Intelligence correlation in real-time</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:11px; color:#64748B;">
+            The Hartford Cyber Insurance Underwriting Innovation • Project Beacon
+          </div>
+          <button type="button" class="btn-next" style="margin:0; padding:10px 22px; font-size:13px; background:var(--hartford-maroon);" onclick="closeTraditionalModal()">
+            Return to Quote Results
+          </button>
+        </div>
       </div>
     </div>
   </div>

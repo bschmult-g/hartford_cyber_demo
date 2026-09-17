@@ -101,6 +101,21 @@ function navigateToStep(stepNumber) {
     
     // Update domain displayed in step 5
     syncDomainFromEmail();
+
+    // Retain clean results layout if verification data already exists
+    const precheckView = document.getElementById("step5PrecheckView");
+    const resultsView = document.getElementById("step5ResultsView");
+    if (lastTelemetryData) {
+      if (precheckView) precheckView.style.display = "none";
+      if (resultsView) resultsView.style.display = "block";
+      const quoteCard = document.getElementById("quoteResultCard");
+      if (quoteCard) quoteCard.classList.add("active");
+    } else {
+      if (precheckView) precheckView.style.display = "block";
+      if (resultsView) resultsView.style.display = "none";
+      const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
+      if (verifyBtn) verifyBtn.style.display = "flex";
+    }
   }
 }
 
@@ -152,6 +167,11 @@ async function triggerGoogleOAuth() {
   const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
   const uwPanel = document.getElementById("underwriterIntelPanel");
   if (uwPanel) uwPanel.style.display = "none";
+
+  const precheckView = document.getElementById("step5PrecheckView");
+  if (precheckView) precheckView.style.display = "block";
+  const resultsView = document.getElementById("step5ResultsView");
+  if (resultsView) resultsView.style.display = "none";
 
   verifyBtn.style.display = "none";
   quoteCard.classList.remove("active");
@@ -258,6 +278,69 @@ function markStepDone(element, text) {
 
 let lastTelemetryData = null;
 
+/**
+ * Distinguishes the exact root cause when a Google API returns 403 or unverified status:
+ * 1. GCP_API_DISABLED: The Admin SDK API is disabled in Google Cloud Console project 799321431260
+ * 2. WORKSPACE_RBAC_FORBIDDEN: Standard Employee account in Google Workspace lacking Delegated Admin privileges
+ * 3. CONSUMER_ACCOUNT: Personal @gmail.com account lacking an enterprise domain
+ * 4. UNLICENSED_EDITION: The Google Workspace edition does not license this module
+ * 5. NOT_AUTHENTICATED: Session unauthenticated, only public DNS queried
+ */
+function formatControlUnverified(errorType, errorDetail, defaultApiName, defaultPerm) {
+  if (errorType === "GCP_API_DISABLED") {
+    return {
+      pillText: "GCP API DISABLED (403)",
+      pillClass: "finding-pill pill-warn",
+      cardClass: "finding-card card-warn",
+      valText: `GCP Project Config: ${defaultApiName} Disabled`,
+      explText: `Google Cloud Project 799321431260 has not enabled ${defaultApiName} in Google Cloud Console. Google API returned HTTP 403: "${errorDetail || 'accessNotConfigured'}". Underwriting verification is paused pending cloud API enablement, not an applicant policy decline.`,
+      impactText: "Fix: Enable Admin SDK API in Google Cloud Console",
+      impactClass: "finding-impact impact-warn"
+    };
+  } else if (errorType === "CONSUMER_ACCOUNT") {
+    return {
+      pillText: "CONSUMER ACCOUNT",
+      pillClass: "finding-pill pill-fail",
+      cardClass: "finding-card card-fail",
+      valText: "Personal @gmail.com (No Tenant)",
+      explText: `Personal consumer accounts lack a Google Workspace organizational directory. Cannot query enterprise ${defaultApiName} policies on personal accounts.`,
+      impactText: "Requirement: Corporate Google Workspace Domain",
+      impactClass: "finding-impact impact-fail"
+    };
+  } else if (errorType === "UNLICENSED_EDITION") {
+    return {
+      pillText: "UNLICENSED (403)",
+      pillClass: "finding-pill pill-neutral",
+      cardClass: "finding-card card-neutral",
+      valText: "Unlicensed in Workspace Edition",
+      explText: `Google Workspace API returned: "${errorDetail || 'Feature not licensed'}". The applicant's Google Workspace subscription edition does not include this enterprise module.`,
+      impactText: "Status: Ineligible for Enterprise Credit",
+      impactClass: "finding-impact impact-neutral"
+    };
+  } else if (errorType === "NOT_AUTHENTICATED") {
+    return {
+      pillText: "NOT AUTHENTICATED",
+      pillClass: "finding-pill pill-neutral",
+      cardClass: "finding-card card-neutral",
+      valText: "Workspace Telemetry Not Queried",
+      explText: "Applicant has not authenticated with Google Workspace. Only public DNS signals (SPF, DMARC, MX) were resolved.",
+      impactText: "Status: Standard DNS Rate (No Workspace Credits)",
+      impactClass: "finding-impact impact-neutral"
+    };
+  } else {
+    // WORKSPACE_RBAC_FORBIDDEN (Standard Employee / Not Authorized)
+    return {
+      pillText: "WORKSPACE RBAC GATE (403)",
+      pillClass: "finding-pill pill-fail",
+      cardClass: "finding-card card-fail",
+      valText: "Blocked by Google Workspace RBAC (HTTP 403)",
+      explText: `Account authenticated successfully, but Google returned HTTP 403 Forbidden ("Not Authorized to access this resource/api"). In Google Workspace, standard employee accounts cannot read domain-wide security controls without Delegated Admin privileges.`,
+      impactText: `Action Required: Grant '${defaultPerm}' Delegated Role`,
+      impactClass: "finding-impact impact-fail"
+    };
+  }
+}
+
 function renderQuoteResult(data) {
   lastTelemetryData = data;
   const quoteCard = document.getElementById("quoteResultCard");
@@ -275,7 +358,16 @@ function renderQuoteResult(data) {
   const attest = data.attestation || {};
   const tel = data.telemetry || {};
 
-  tierBadge.className = "";
+  // Clean up screen: transition to verified results dashboard mode
+  const precheckView = document.getElementById("step5PrecheckView");
+  if (precheckView) precheckView.style.display = "none";
+  const resultsView = document.getElementById("step5ResultsView");
+  if (resultsView) resultsView.style.display = "block";
+  const resultsDomainHeader = document.getElementById("resultsDomainHeader");
+  if (resultsDomainHeader) resultsDomainHeader.textContent = tel.domain || currentDomain;
+  if (quoteCard) quoteCard.classList.add("active");
+
+  tierBadge.className = "tier-badge";
   if (rating.decision === "APPROVED") {
     tierBadge.classList.add("badge-preferred");
     tierBadge.textContent = rating.tier_display || "PREFERRED RISK (Tier 1)";
@@ -298,10 +390,32 @@ function renderQuoteResult(data) {
       btnBind.style.cursor = "pointer";
       btnBind.textContent = "Bind Standard Policy & Download Binder";
     }
+  } else if (rating.decision === "GCP_CONFIGURATION_REQUIRED") {
+    tierBadge.classList.add("badge-conditional");
+    tierBadge.textContent = rating.tier_display || "ACTION REQUIRED: GCP API DISABLED (403)";
+    quoteDecision.textContent = "GCP API NOT ENABLED (403)";
+    quoteDecision.style.color = "#D97706";
+    if (btnBind) {
+      btnBind.disabled = true;
+      btnBind.style.background = "#D97706";
+      btnBind.style.cursor = "not-allowed";
+      btnBind.textContent = "🔧 Enable Admin SDK API in Google Cloud Console";
+    }
+  } else if (rating.decision === "CONSUMER_ACCOUNT_INELIGIBLE") {
+    tierBadge.classList.add("badge-declined");
+    tierBadge.textContent = rating.tier_display || "ACTION REQUIRED: CORPORATE DOMAIN";
+    quoteDecision.textContent = "CONSUMER GMAIL INELIGIBLE";
+    quoteDecision.style.color = "#DC2626";
+    if (btnBind) {
+      btnBind.disabled = true;
+      btnBind.style.background = "#DC2626";
+      btnBind.style.cursor = "not-allowed";
+      btnBind.textContent = "🔒 Corporate Google Workspace Domain Required";
+    }
   } else if (rating.decision === "INSUFFICIENT_DELEGATION") {
     tierBadge.classList.add("badge-declined");
-    tierBadge.textContent = rating.tier_display || "INSUFFICIENT DELEGATION (403)";
-    quoteDecision.textContent = "ACTION REQUIRED: STANDARD ACCOUNT";
+    tierBadge.textContent = rating.tier_display || "ACTION REQUIRED: DELEGATED ADMIN ROLE (403)";
+    quoteDecision.textContent = "INSUFFICIENT WORKSPACE ROLE (403)";
     quoteDecision.style.color = "#DC2626";
     if (btnBind) {
       btnBind.disabled = true;
@@ -336,8 +450,63 @@ function renderQuoteResult(data) {
   }
 
   if (attest) {
-    attestToken.textContent = attest.policy_attestation_token || "hig_gcp_attest_7f8a9...";
-    attestHash.textContent = attest.sha256_fingerprint || "b43c8d19...";
+    const tok = attest.policy_attestation_token || "—";
+    const hsh = attest.sha256_fingerprint || "—";
+    if (attestToken) attestToken.textContent = tok;
+    if (attestHash) attestHash.textContent = hsh;
+    const attestTokenFull = document.getElementById("attestTokenFull");
+    if (attestTokenFull) attestTokenFull.textContent = tok;
+    const attestHashFull = document.getElementById("attestHashFull");
+    if (attestHashFull) attestHashFull.textContent = hsh;
+  }
+
+  // Calculate passed controls for Executive Hero KPI
+  let passedControls = 0;
+  if (tel.mfa_enforced) passedControls++;
+  if (tel.dmarc_policy === "reject" || tel.dmarc_policy === "quarantine") passedControls++;
+  if (tel.super_admin_count !== null && tel.super_admin_count !== undefined && tel.super_admin_count <= 3) passedControls++;
+  if (tel.device_encryption_pct !== null && tel.device_encryption_pct !== undefined && tel.device_encryption_pct >= 90.0) passedControls++;
+  if (tel.dkim_record_present || tel.dkim_verified) passedControls++;
+  if (tel.dlp_rules_active) passedControls++;
+  if (tel.vault_retention_active) passedControls++;
+  if (tel.dormant_user_count === 0 && tel.total_user_count > 0) passedControls++;
+
+  const kpiControls = document.getElementById("kpiControlsCount");
+  const kpiControlsTag = document.getElementById("kpiControlsTag");
+  if (kpiControls) {
+    if (rating.decision === "GCP_CONFIGURATION_REQUIRED") {
+      kpiControls.textContent = "GCP API Paused";
+      if (kpiControlsTag) {
+        kpiControlsTag.textContent = "API Disabled (403)";
+        kpiControlsTag.className = "kpi-tag kpi-tag-crit";
+      }
+    } else if (rating.decision === "INSUFFICIENT_DELEGATION") {
+      kpiControls.textContent = "RBAC Blocked";
+      if (kpiControlsTag) {
+        kpiControlsTag.textContent = "Standard User (403)";
+        kpiControlsTag.className = "kpi-tag kpi-tag-crit";
+      }
+    } else if (rating.decision === "CONSUMER_ACCOUNT_INELIGIBLE") {
+      kpiControls.textContent = "Personal Gmail";
+      if (kpiControlsTag) {
+        kpiControlsTag.textContent = "No Tenant";
+        kpiControlsTag.className = "kpi-tag kpi-tag-crit";
+      }
+    } else {
+      kpiControls.textContent = `${passedControls} of 8 Passed`;
+      if (kpiControlsTag) {
+        if (passedControls === 8) {
+          kpiControlsTag.textContent = "100% Verified";
+          kpiControlsTag.className = "kpi-tag kpi-tag-pass";
+        } else if (passedControls >= 5) {
+          kpiControlsTag.textContent = "Sufficient Defense";
+          kpiControlsTag.className = "kpi-tag kpi-tag-opt";
+        } else {
+          kpiControlsTag.textContent = "Gaps Detected";
+          kpiControlsTag.className = "kpi-tag kpi-tag-crit";
+        }
+      }
+    }
   }
 
   // ==================== FINDINGS & DECISION EXPLAINER POPULATION ====================
@@ -370,26 +539,52 @@ function renderQuoteResult(data) {
   if (delegationBanner) {
     const acct = tel.verified_account || "Unknown Account";
     const role = tel.account_role || "STANDARD_USER";
+    const rbacCause = tel.rbac_block_cause;
+
     if (delegationAccount) delegationAccount.textContent = acct;
 
-    if (role === "SUPER_ADMIN") {
+    if (role === "SUPER_ADMIN" && tel.delegation_verified) {
       if (delegationIcon) delegationIcon.textContent = "👑";
-      if (delegationSubtitle) delegationSubtitle.textContent = "Google Workspace RBAC: Super Admin (Direct Administrative Authority)";
+      if (delegationSubtitle) delegationSubtitle.innerHTML = "Google Workspace RBAC: <strong>Super Admin Verified</strong> (Direct administrative authority across tenant)";
       if (delegationPill) {
         delegationPill.textContent = "SUPER ADMIN";
         delegationPill.className = "finding-pill pill-pass";
       }
       delegationBanner.style.background = "#F0FDF4";
       delegationBanner.style.borderColor = "#BBF7D0";
-    } else if (role === "DELEGATED_ADMIN") {
+    } else if (role === "DELEGATED_ADMIN" && tel.delegation_verified) {
       if (delegationIcon) delegationIcon.textContent = "🛡️";
-      if (delegationSubtitle) delegationSubtitle.textContent = "Google Workspace RBAC: Delegated Admin Verified (Enterprise Least-Privilege)";
+      if (delegationSubtitle) delegationSubtitle.innerHTML = "Google Workspace RBAC: <strong>Delegated Admin Verified</strong> (Least-privilege read-only security auditor role)";
       if (delegationPill) {
         delegationPill.textContent = "DELEGATED ADMIN";
         delegationPill.className = "finding-pill pill-pass";
       }
       delegationBanner.style.background = "#F0FDF4";
       delegationBanner.style.borderColor = "#BBF7D0";
+    } else if (rbacCause === "GCP_API_DISABLED") {
+      // 1. CLEARLY DISTINGUISH GCP PROJECT RESOURCE DEPLOYMENT ISSUE (API DISABLED)
+      if (delegationIcon) delegationIcon.textContent = "🔧";
+      if (delegationSubtitle) {
+        delegationSubtitle.innerHTML = `<strong style="color:#B45309;">Google Cloud Project Config (HTTP 403):</strong> The Admin SDK API is disabled in Google Cloud Console project <code>799321431260</code>. Underwriting is paused pending cloud API enablement, <em>not an applicant policy decline</em>.`;
+      }
+      if (delegationPill) {
+        delegationPill.textContent = "GCP API DISABLED (403)";
+        delegationPill.className = "finding-pill pill-warn";
+      }
+      delegationBanner.style.background = "#FFFBEB";
+      delegationBanner.style.borderColor = "#FDE68A";
+    } else if (rbacCause === "CONSUMER_ACCOUNT") {
+      // 2. CLEARLY DISTINGUISH CONSUMER GMAIL
+      if (delegationIcon) delegationIcon.textContent = "👤";
+      if (delegationSubtitle) {
+        delegationSubtitle.innerHTML = `<strong style="color:#B91C1C;">Consumer Gmail Account:</strong> Authenticated with a personal account (<code>${escapeHtml(acct)}</code>). Commercial cyber insurance underwriting requires an organization-managed Google Workspace corporate tenant.`;
+      }
+      if (delegationPill) {
+        delegationPill.textContent = "CONSUMER GMAIL";
+        delegationPill.className = "finding-pill pill-fail";
+      }
+      delegationBanner.style.background = "#FEF2F2";
+      delegationBanner.style.borderColor = "#FECACA";
     } else if (role === "NOT_AUTHENTICATED") {
       if (delegationIcon) delegationIcon.textContent = "🌐";
       if (delegationSubtitle) delegationSubtitle.textContent = "Unauthenticated Session: Public DNS Only (Workspace Telemetry Not Queried)";
@@ -400,17 +595,22 @@ function renderQuoteResult(data) {
       delegationBanner.style.background = "#F8FAFC";
       delegationBanner.style.borderColor = "#E2E8F0";
     } else {
-      // STANDARD_USER
-      if (delegationIcon) delegationIcon.textContent = "⚠️";
-      if (delegationSubtitle) delegationSubtitle.textContent = "Standard Employee Account: Google RBAC Blocked Organization APIs (HTTP 403)";
+      // 3. CLEARLY DISTINGUISH WORKSPACE RBAC AUTHORIZATION GATE
+      if (delegationIcon) delegationIcon.textContent = "🔒";
+      if (delegationSubtitle) {
+        delegationSubtitle.innerHTML = `<strong style="color:#B91C1C;">Google Workspace RBAC Authorization Gate (HTTP 403):</strong> Account <code>${escapeHtml(acct)}</code> authenticated, but is a <em>Standard Employee</em> lacking Delegated Admin privileges in Google Workspace. Domain-wide security posture cannot be read without administrative delegation.`;
+      }
       if (delegationPill) {
-        delegationPill.textContent = "STANDARD ACCOUNT (403)";
+        delegationPill.textContent = "WORKSPACE RBAC GATE (403)";
         delegationPill.className = "finding-pill pill-fail";
       }
       delegationBanner.style.background = "#FEF2F2";
       delegationBanner.style.borderColor = "#FECACA";
     }
   }
+
+  // Default error cause if control-specific error is not populated
+  const defaultErrType = tel.account_role === "NOT_AUTHENTICATED" ? "NOT_AUTHENTICATED" : (tel.rbac_block_cause || "WORKSPACE_ROLE_STANDARD");
 
   // 1. MFA / 2SV Card
   const pillMfa = document.getElementById("pillMfa");
@@ -420,13 +620,14 @@ function renderQuoteResult(data) {
   const cardMfa = document.getElementById("cardMfa");
 
   if (tel.mfa_enforced === null || tel.mfa_enrolled_pct === null || tel.mfa_enrolled_pct === undefined) {
-    pillMfa.textContent = "UNVERIFIED (403)";
-    pillMfa.className = "finding-pill pill-fail";
-    cardMfa.className = "finding-card card-fail";
-    valMfa.textContent = "Blocked by Google RBAC (HTTP 403)";
-    explMfa.textContent = "Standard employee account cannot read domain-wide 2SV statistics. Google Reports API returned 403 Forbidden.";
-    impactMfa.textContent = "Action Required: Delegated Admin Role";
-    impactMfa.className = "finding-impact impact-fail";
+    const unv = formatControlUnverified(tel.mfa_error_type || defaultErrType, tel.mfa_error_detail || tel.rbac_block_detail, "Admin Reports API", "Reports (Read)");
+    pillMfa.textContent = unv.pillText;
+    pillMfa.className = unv.pillClass;
+    cardMfa.className = unv.cardClass;
+    valMfa.textContent = unv.valText;
+    explMfa.textContent = unv.explText;
+    impactMfa.textContent = unv.impactText;
+    impactMfa.className = unv.impactClass;
   } else if (tel.mfa_enforced) {
     pillMfa.textContent = `PASS (${tel.mfa_enrolled_pct}% ENFORCED)`;
     pillMfa.className = "finding-pill pill-pass";
@@ -452,7 +653,7 @@ function renderQuoteResult(data) {
   const impactDmarc = document.getElementById("impactDmarc");
   const cardDmarc = document.getElementById("cardDmarc");
 
-  const dmarcPolicy = tel.dmarc_policy || (tel.dmarc_record_present ? "quarantine" : "missing");
+  const dmarcPolicy = tel.dmarc_policy || "missing";
   const spfActive = tel.spf_record_present;
 
   if (dmarcPolicy === "reject") {
@@ -499,13 +700,14 @@ function renderQuoteResult(data) {
   const adminCount = tel.super_admin_count;
   if (pillAdmin) {
     if (adminCount === null || adminCount === undefined) {
-      pillAdmin.textContent = "UNVERIFIED (403)";
-      pillAdmin.className = "finding-pill pill-fail";
-      cardAdmin.className = "finding-card card-fail";
-      valAdmin.textContent = "Blocked by Google RBAC (HTTP 403)";
-      explAdmin.textContent = "Directory Users API returned 403 Forbidden. Requires 'Users (Read)' delegated admin privilege.";
-      impactAdmin.textContent = "Impact: Ineligible for Least-Privilege Credit";
-      impactAdmin.className = "finding-impact impact-fail";
+      const unv = formatControlUnverified(tel.directory_error_type || defaultErrType, tel.directory_error_detail || tel.rbac_block_detail, "Directory Users API", "Users (Read)");
+      pillAdmin.textContent = unv.pillText;
+      pillAdmin.className = unv.pillClass;
+      cardAdmin.className = unv.cardClass;
+      valAdmin.textContent = unv.valText;
+      explAdmin.textContent = unv.explText;
+      impactAdmin.textContent = unv.impactText;
+      impactAdmin.className = unv.impactClass;
     } else if (adminCount <= 3) {
       pillAdmin.textContent = `OPTIMAL (${adminCount} ADMINS)`;
       pillAdmin.className = "finding-pill pill-pass";
@@ -546,13 +748,14 @@ function renderQuoteResult(data) {
 
   if (pillDevice) {
     if (devCount === null || devCount === undefined) {
-      pillDevice.textContent = "UNVERIFIED (403)";
-      pillDevice.className = "finding-pill pill-fail";
-      cardDevice.className = "finding-card card-fail";
-      valDevice.textContent = "Blocked by Google RBAC (HTTP 403)";
-      explDevice.textContent = "Google Endpoint Management API returned 403 Forbidden. Requires 'Mobile Device Management' delegated admin privilege.";
-      impactDevice.textContent = "Impact: Ineligible for Endpoint Credit";
-      impactDevice.className = "finding-impact impact-fail";
+      const unv = formatControlUnverified(tel.endpoint_error_type || defaultErrType, tel.endpoint_error_detail || tel.rbac_block_detail, "Endpoint Management API", "Mobile Device Management");
+      pillDevice.textContent = unv.pillText;
+      pillDevice.className = unv.pillClass;
+      cardDevice.className = unv.cardClass;
+      valDevice.textContent = unv.valText;
+      explDevice.textContent = unv.explText;
+      impactDevice.textContent = unv.impactText;
+      impactDevice.className = unv.impactClass;
     } else if (devCount === 0) {
       pillDevice.textContent = "0 ENROLLED DEVICES";
       pillDevice.className = "finding-pill pill-neutral";
@@ -595,7 +798,7 @@ function renderQuoteResult(data) {
   const impactMx = document.getElementById("impactMx");
   const cardMx = document.getElementById("cardMx");
 
-  const mxProvider = tel.mx_provider || "Google Workspace Enterprise";
+  const mxProvider = tel.mx_provider || "Unresolved Mail Provider";
   const dkimActive = tel.dkim_record_present || tel.dkim_verified;
 
   if (pillMx) {
@@ -603,17 +806,25 @@ function renderQuoteResult(data) {
       pillMx.textContent = "OPTIMAL (CLOUD MX)";
       pillMx.className = "finding-pill pill-pass";
       cardMx.className = "finding-card card-pass";
-      valMx.textContent = `Google Cloud MX | DKIM 2048-bit Signed`;
+      valMx.textContent = `Google Cloud MX | DKIM Signed`;
       explMx.textContent = "Mail routes exclusively through protected Google cloud infrastructure with cryptographic RSA signatures. Zero on-prem Exchange vulnerability.";
       impactMx.textContent = "Impact: -1% Cryptographic Signing Credit (-$85/yr)";
       impactMx.className = "finding-impact impact-credit";
+    } else if (dkimActive) {
+      pillMx.textContent = "PASS (DKIM SIGNED)";
+      pillMx.className = "finding-pill pill-pass";
+      cardMx.className = "finding-card card-pass";
+      valMx.textContent = `${mxProvider} | DKIM Signed`;
+      explMx.textContent = "Inbound/outbound email verified through mail gateway with cryptographic RSA signatures.";
+      impactMx.textContent = "Impact: -1% Cryptographic Signing Credit (-$85/yr)";
+      impactMx.className = "finding-impact impact-credit";
     } else {
-      pillMx.textContent = dkimActive ? "DKIM SIGNED" : "STANDARD MX";
+      pillMx.textContent = "STANDARD MX";
       pillMx.className = "finding-pill pill-neutral";
       cardMx.className = "finding-card card-neutral";
-      valMx.textContent = `${mxProvider} | DKIM: ${dkimActive ? 'Configured' : 'Unconfirmed'}`;
-      explMx.textContent = "Inbound/outbound email verified through cloud gateway. Cryptographic signing standard.";
-      impactMx.textContent = "Status: Verified Mail Infrastructure";
+      valMx.textContent = `${mxProvider} | DKIM: Unconfirmed`;
+      explMx.textContent = "Inbound/outbound email verified through mail gateway. Cryptographic DKIM signing unconfirmed.";
+      impactMx.textContent = "Status: Standard Mail Delivery";
       impactMx.className = "finding-impact impact-neutral";
     }
   }
@@ -626,18 +837,19 @@ function renderQuoteResult(data) {
   const cardDlp = document.getElementById("cardDlp");
 
   if (tel.dlp_rules_active === null || tel.dlp_rules_active === undefined) {
-    pillDlp.textContent = "UNVERIFIED (403)";
-    pillDlp.className = "finding-pill pill-fail";
-    cardDlp.className = "finding-card card-fail";
-    valDlp.textContent = "Blocked by Google RBAC (HTTP 403)";
-    explDlp.textContent = "Workspace Rules API returned 403 Forbidden. Requires 'Audit and Reports' delegated admin privilege.";
-    impactDlp.textContent = "Impact: Ineligible for DLP Credit";
-    impactDlp.className = "finding-impact impact-fail";
+    const unv = formatControlUnverified(tel.dlp_error_type || defaultErrType, tel.dlp_error_detail || tel.rbac_block_detail, "Workspace Rules API", "Security & Compliance");
+    pillDlp.textContent = unv.pillText;
+    pillDlp.className = unv.pillClass;
+    cardDlp.className = unv.cardClass;
+    valDlp.textContent = unv.valText;
+    explDlp.textContent = unv.explText;
+    impactDlp.textContent = unv.impactText;
+    impactDlp.className = unv.impactClass;
   } else if (tel.dlp_rules_active) {
     pillDlp.textContent = "PASS (ACTIVE)";
     pillDlp.className = "finding-pill pill-pass";
     cardDlp.className = "finding-card card-pass";
-    valDlp.textContent = `Active Rules (${tel.dlp_rule_count || 1}+ rule events)`;
+    valDlp.textContent = `Active Rules (${tel.dlp_rule_count || 0} rule events)`;
     explDlp.textContent = "Active inspection for credit cards, SSNs, and confidential customer records confirmed across Google Workspace.";
     impactDlp.textContent = "Impact: -4% Data Protection Discount (-$340/yr)";
     impactDlp.className = "finding-impact impact-credit";
@@ -659,13 +871,14 @@ function renderQuoteResult(data) {
   const cardVault = document.getElementById("cardVault");
 
   if (tel.vault_retention_active === null || tel.vault_retention_active === undefined) {
-    pillVault.textContent = "UNVERIFIED (403)";
-    pillVault.className = "finding-pill pill-fail";
-    cardVault.className = "finding-card card-fail";
-    valVault.textContent = "Blocked by Google RBAC (HTTP 403)";
-    explVault.textContent = "Google Vault API returned 403 Forbidden. Google Vault is either unlicensed or account lacks eDiscovery privilege.";
-    impactVault.textContent = "Impact: Ineligible for Vault Retention Credit";
-    impactVault.className = "finding-impact impact-fail";
+    const unv = formatControlUnverified(tel.vault_error_type || defaultErrType, tel.vault_error_detail || tel.rbac_block_detail, "Google Vault API", "eDiscovery / Vault");
+    pillVault.textContent = unv.pillText;
+    pillVault.className = unv.pillClass;
+    cardVault.className = unv.cardClass;
+    valVault.textContent = unv.valText;
+    explVault.textContent = unv.explText;
+    impactVault.textContent = unv.impactText;
+    impactVault.className = unv.impactClass;
   } else if (tel.vault_retention_active) {
     pillVault.textContent = "PASS (ACTIVE)";
     pillVault.className = "finding-pill pill-pass";
@@ -696,13 +909,14 @@ function renderQuoteResult(data) {
 
   if (pillUsers) {
     if (totalUsers === null || totalUsers === undefined) {
-      pillUsers.textContent = "UNVERIFIED (403)";
-      pillUsers.className = "finding-pill pill-fail";
-      cardUsers.className = "finding-card card-fail";
-      valUsers.textContent = "Blocked by Google RBAC (HTTP 403)";
-      explUsers.textContent = "Directory Users API returned 403 Forbidden. Tenant headcount cannot be enumerated without delegated admin rights.";
-      impactUsers.textContent = "Status: Unverified Tenant Scope";
-      impactUsers.className = "finding-impact impact-fail";
+      const unv = formatControlUnverified(tel.directory_error_type || defaultErrType, tel.directory_error_detail || tel.rbac_block_detail, "Directory Users API", "Users (Read)");
+      pillUsers.textContent = unv.pillText;
+      pillUsers.className = unv.pillClass;
+      cardUsers.className = unv.cardClass;
+      valUsers.textContent = unv.valText;
+      explUsers.textContent = unv.explText;
+      impactUsers.textContent = unv.impactText;
+      impactUsers.className = unv.impactClass;
     } else if (dormantCount === 0) {
       pillUsers.textContent = `CLEAN (${totalUsers} USERS)`;
       pillUsers.className = "finding-pill pill-pass";
@@ -750,9 +964,18 @@ function renderQuoteResult(data) {
   if (rawDisplay) {
     rawDisplay.textContent = JSON.stringify({
       domain: tel.domain,
-      verified_account: tel.verified_account || "N/A (Canned/DNS)",
+      verified_account: tel.verified_account || "N/A",
       account_role: tel.account_role || "UNKNOWN",
       delegation_verified: tel.delegation_verified || false,
+      rbac_block_cause: tel.rbac_block_cause || "NONE",
+      rbac_block_detail: tel.rbac_block_detail || "None",
+      error_diagnostics: {
+        mfa_error: { type: tel.mfa_error_type, detail: tel.mfa_error_detail },
+        directory_error: { type: tel.directory_error_type, detail: tel.directory_error_detail },
+        endpoint_error: { type: tel.endpoint_error_type, detail: tel.endpoint_error_detail },
+        vault_error: { type: tel.vault_error_type, detail: tel.vault_error_detail },
+        dlp_error: { type: tel.dlp_error_type, detail: tel.dlp_error_detail }
+      },
       directory_access_granted: tel.directory_access_granted || false,
       reports_access_granted: tel.reports_access_granted || false,
       endpoint_access_granted: tel.endpoint_access_granted || false,
@@ -788,21 +1011,52 @@ function renderQuoteResult(data) {
   const auditListEl = document.getElementById("rawAuditList");
   if (auditListEl) {
     if (tel.api_audit_log && tel.api_audit_log.length > 0) {
-      auditListEl.innerHTML = tel.api_audit_log.map(log => `<li>✓ ${escapeHtml(log)}</li>`).join("");
+      auditListEl.innerHTML = tel.api_audit_log.map(log => {
+        const isGcp = log.includes("403 GCP Error") || log.includes("GCP_API_DISABLED");
+        const isRbac = log.includes("403 Workspace RBAC") || log.includes("Standard User") || log.includes("Not Authorized");
+        const isErr = isGcp || isRbac || log.includes("failed") || log.includes("error");
+        
+        let icon = "✓";
+        let color = "#166534";
+        let bg = "#F0FDF4";
+        let border = "#BBF7D0";
+
+        if (isGcp) {
+          icon = "🔧";
+          color = "#B45309";
+          bg = "#FFFBEB";
+          border = "#FDE68A";
+        } else if (isRbac) {
+          icon = "🔒";
+          color = "#B91C1C";
+          bg = "#FEF2F2";
+          border = "#FECACA";
+        } else if (isErr) {
+          icon = "⚠️";
+          color = "#991B1B";
+          bg = "#FEF2F2";
+          border = "#FECACA";
+        }
+
+        return `<li style="list-style:none; margin-bottom:6px; padding:6px 10px; border-radius:6px; background:${bg}; border:1px solid ${border}; color:${color}; font-size:11px; font-family:monospace;">
+          <span style="font-weight:700; margin-right:6px;">${icon}</span>${escapeHtml(log)}
+        </li>`;
+      }).join("");
     } else {
       auditListEl.innerHTML = `
-        <li>✓ Identity Authentication: Google OAuth 2.0 Super Admin Token Handshake</li>
-        <li>✓ Live DNS Resolution: Queried public SPF &amp; DMARC TXT records for ${escapeHtml(tel.domain || currentDomain)}</li>
-        <li>✓ Directory Inspection: Queried accounts:is_2sv_enforced &amp; enrollment tier</li>
-        <li>✓ Storage Rules Inspection: Queried Cloud DLP &amp; Google Vault retention policies</li>
-        <li>✓ Ephemeral Discard: Raw JSON in-memory evaluated and purged under Zero-Retention policy</li>
+        <li style="list-style:none; margin-bottom:6px; padding:6px 10px; border-radius:6px; background:#F8FAFC; border:1px solid #E2E8F0; color:#64748B; font-size:11px; font-family:monospace;">
+          ℹ️ Public DNS Resolution only: Queried SPF, DMARC, and MX records for ${escapeHtml(tel.domain || currentDomain)}. Direct Google Workspace Admin API telemetry was not executed for this unauthenticated session.
+        </li>
       `;
     }
   }
 
   quoteCard.classList.add("active");
   const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
-  verifyBtn.style.display = "flex";
+  if (verifyBtn) verifyBtn.style.display = "none";
+
+  // Activate default Security Controls tab
+  switchResultsTab('tabSecurityControls');
 
   // Underwriter Threat Intelligence Correlation Panel
   const uwPanel = document.getElementById("underwriterIntelPanel");
@@ -868,6 +1122,11 @@ async function executeScenarioUnderwrite(domain) {
   const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
   const uwPanel = document.getElementById("underwriterIntelPanel");
   if (uwPanel) uwPanel.style.display = "none";
+
+  const precheckView = document.getElementById("step5PrecheckView");
+  if (precheckView) precheckView.style.display = "block";
+  const resultsView = document.getElementById("step5ResultsView");
+  if (resultsView) resultsView.style.display = "none";
 
   quoteCard.classList.remove("active");
   verifyBtn.style.display = "none";
@@ -1243,4 +1502,77 @@ function renderUnderwriterAssessment(assessment) {
       fitScoreEl.style.color = "#DC2626";
     }
   }
+
+  // Update Hero KPI Chip
+  const kpiThreat = document.getElementById("kpiThreatScore");
+  const kpiThreatTag = document.getElementById("kpiThreatTag");
+  if (kpiThreat) {
+    kpiThreat.textContent = `${fitScore} / 100`;
+    if (kpiThreatTag) {
+      if (fitScore >= 80) {
+        kpiThreatTag.textContent = "Optimal Defense";
+        kpiThreatTag.className = "kpi-tag kpi-tag-opt";
+      } else if (fitScore >= 50) {
+        kpiThreatTag.textContent = "Moderate Defense";
+        kpiThreatTag.className = "kpi-tag kpi-tag-warn";
+      } else {
+        kpiThreatTag.textContent = "Deficient Defense";
+        kpiThreatTag.className = "kpi-tag kpi-tag-crit";
+      }
+    }
+  }
+}
+
+/* ==================== STEP 5 RESULTS DASHBOARD CONTROLLERS ==================== */
+
+function switchResultsTab(tabId) {
+  const tabBtns = document.querySelectorAll(".results-tab-btn");
+  const tabPanes = document.querySelectorAll(".results-tab-pane");
+
+  tabBtns.forEach(btn => {
+    if (btn.getAttribute("data-tab") === tabId) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  tabPanes.forEach(pane => {
+    if (pane.id === tabId) {
+      pane.classList.add("active");
+    } else {
+      pane.classList.remove("active");
+    }
+  });
+}
+
+function openTraditionalModal() {
+  const modal = document.getElementById("traditionalComparisonModal");
+  if (modal) modal.style.display = "flex";
+}
+
+function closeTraditionalModal() {
+  const modal = document.getElementById("traditionalComparisonModal");
+  if (modal) modal.style.display = "none";
+}
+
+function resetStep5ToPrecheck() {
+  const precheckView = document.getElementById("step5PrecheckView");
+  if (precheckView) precheckView.style.display = "block";
+  const resultsView = document.getElementById("step5ResultsView");
+  if (resultsView) resultsView.style.display = "none";
+
+  const quoteCard = document.getElementById("quoteResultCard");
+  if (quoteCard) quoteCard.classList.remove("active");
+
+  const verifyBtn = document.getElementById("btnTriggerGoogleVerify");
+  if (verifyBtn) verifyBtn.style.display = "flex";
+
+  const scanBox = document.getElementById("scanProgressBox");
+  if (scanBox) scanBox.classList.remove("active");
+}
+
+function retriggerVerification() {
+  resetStep5ToPrecheck();
+  triggerGoogleOAuth();
 }
