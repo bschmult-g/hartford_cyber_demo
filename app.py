@@ -8,7 +8,7 @@ import json
 import secrets
 import time
 from urllib.parse import quote
-from typing import Optional, Dict, Any
+from typing import Any
 
 from dotenv import load_dotenv
 import httpx
@@ -45,8 +45,8 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
 REDIRECT_URI = os.getenv("REDIRECT_URI", "http://localhost:8000/oauth/callback")
 
 # In-memory transient state and verification cache (purged after retrieval)
-oauth_states: Dict[str, Dict[str, Any]] = {}
-verified_sessions: Dict[str, Dict[str, Any]] = {}
+oauth_states: dict[str, dict[str, Any]] = {}
+verified_sessions: dict[str, dict[str, Any]] = {}
 
 SCOPES = [
     "openid",
@@ -64,7 +64,7 @@ SCOPES = [
 class UnderwritingRequest(BaseModel):
     domain: str = Field(..., description="Applicant domain, e.g. foremycorp.com")
     organization_name: str = Field(..., description="Registered business name")
-    profile_override: Optional[str] = Field(None, description="Preset scenario override")
+    profile_override: str | None = Field(None, description="Preset scenario override")
 
 class WhatIfRequest(BaseModel):
     mfa_enforced: bool = True
@@ -74,8 +74,42 @@ class WhatIfRequest(BaseModel):
     dlp_rules_active: bool = True
     vault_retention_active: bool = True
 
-@app.get("/api/auth/google/url")
-async def get_google_auth_url(domain: str = Query(""), organization_name: str = Query("")):
+class ThreatAssessmentRequest(BaseModel):
+    telemetry: dict[str, Any]
+    industry_key: str | None = "legal_accounting"
+
+# Response Models
+class GoogleAuthUrlResponse(BaseModel):
+    status: str
+    auth_url: str
+    state: str
+
+class UnderwritingResponse(BaseModel):
+    status: str
+    telemetry: dict[str, Any]
+    rating: dict[str, Any]
+    attestation: dict[str, Any]
+
+class WhatIfResponse(BaseModel):
+    status: str
+    simulated_telemetry: dict[str, Any]
+    rating: dict[str, Any]
+
+class DnsProbeResponse(BaseModel):
+    status: str
+    dns_posture: dict[str, Any]
+
+class ThreatSectorsResponse(BaseModel):
+    status: str
+    api_source: str
+    sectors: list[dict[str, Any]]
+
+class ThreatAssessmentResponse(BaseModel):
+    status: str
+    assessment: dict[str, Any]
+
+@app.get("/api/auth/google/url", response_model=GoogleAuthUrlResponse)
+async def get_google_auth_url(domain: str = Query(""), organization_name: str = Query("")) -> dict[str, Any]:
     """
     Generates a secure Google OAuth 2.0 authorization URL with CSRF state and least-privilege read-only scopes.
     """
@@ -115,9 +149,9 @@ async def get_google_auth_url(domain: str = Query(""), organization_name: str = 
 
 @app.get("/oauth/callback")
 async def handle_oauth_callback(
-    code: Optional[str] = Query(None),
-    state: Optional[str] = Query(None),
-    error: Optional[str] = Query(None)
+    code: str | None = Query(None),
+    state: str | None = Query(None),
+    error: str | None = Query(None)
 ):
     """
     Handles the redirect from Google accounts:
@@ -268,8 +302,8 @@ async def get_session_result(session_id: str):
         raise HTTPException(status_code=404, detail="Session expired or not found")
     return res
 
-@app.post("/api/underwrite")
-async def perform_underwriting(req: UnderwritingRequest):
+@app.post("/api/underwrite", response_model=UnderwritingResponse)
+async def perform_underwriting(req: UnderwritingRequest) -> dict[str, Any]:
     """
     Executes automated cyber underwriting:
     1. Collects ephemeral Google Workspace & DNS telemetry.
@@ -296,8 +330,8 @@ async def perform_underwriting(req: UnderwritingRequest):
         "attestation": attestation
     }
 
-@app.post("/api/simulate-what-if")
-async def simulate_what_if(req: WhatIfRequest):
+@app.post("/api/simulate-what-if", response_model=WhatIfResponse)
+async def simulate_what_if(req: WhatIfRequest) -> dict[str, Any]:
     """
     Simulates real-time rating changes when underwriter or applicant toggles controls.
     """
@@ -317,8 +351,8 @@ async def simulate_what_if(req: WhatIfRequest):
         "rating": rating
     }
 
-@app.get("/api/dns-live-check")
-async def probe_dns_live(domain: str = Query(..., description="Target domain, e.g. thehartford.com")):
+@app.get("/api/dns-live-check", response_model=DnsProbeResponse)
+async def probe_dns_live(domain: str = Query(..., description="Target domain, e.g. thehartford.com")) -> dict[str, Any]:
     """
     Resolves live SPF, DMARC, and DKIM DNS records for any live domain in real time.
     """
@@ -334,12 +368,8 @@ async def probe_dns_live(domain: str = Query(..., description="Target domain, e.
 
 # ==================== GOOGLE CLOUD THREAT INTELLIGENCE (MANDIANT) ====================
 
-class ThreatAssessmentRequest(BaseModel):
-    telemetry: Dict[str, Any]
-    industry_key: Optional[str] = "legal_accounting"
-
-@app.get("/api/threat-intel/sectors")
-async def get_threat_intel_sectors():
+@app.get("/api/threat-intel/sectors", response_model=ThreatSectorsResponse)
+async def get_threat_intel_sectors() -> dict[str, Any]:
     """
     Returns available Mandiant sector threat intelligence profiles
     from threatintelligence.googleapis.com.
@@ -350,8 +380,8 @@ async def get_threat_intel_sectors():
         "sectors": get_all_sector_profiles()
     }
 
-@app.post("/api/threat-intel/assess")
-async def perform_threat_assessment(req: ThreatAssessmentRequest):
+@app.post("/api/threat-intel/assess", response_model=ThreatAssessmentResponse)
+async def perform_threat_assessment(req: ThreatAssessmentRequest) -> dict[str, Any]:
     """
     Evaluates applicant's verified Google Workspace security posture against
     real-time sector threat intelligence and active threat actor campaigns.

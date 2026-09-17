@@ -3,40 +3,41 @@ Project Beacon - Google Workspace & DNS Telemetry Service
 Collects security posture data ephemerally for cyber insurance underwriting.
 """
 
+import asyncio
 import re
 import dns.resolver
 import httpx
-from typing import Dict, Any, Optional
+from typing import Any
 from pydantic import BaseModel
 
 class SecurityPosture(BaseModel):
     domain: str
     organization_name: str
-    mfa_enforced: Optional[bool] = None
-    mfa_enrolled_pct: Optional[float] = None
+    mfa_enforced: bool | None = None
+    mfa_enrolled_pct: float | None = None
     mfa_method_tier: str  # "FIDO2_SECURITY_KEY", "TOTP_AUTHENTICATOR", "SMS_WEAK", "UNVERIFIED"
     spf_record_present: bool
-    spf_record_value: Optional[str] = None
+    spf_record_value: str | None = None
     spf_valid: bool
     dmarc_record_present: bool
-    dmarc_record_value: Optional[str] = None
+    dmarc_record_value: str | None = None
     dmarc_policy: str  # "reject", "quarantine", "none", "missing"
     dkim_verified: bool
     dkim_record_present: bool
     mx_provider: str
-    super_admin_count: Optional[int] = None
-    total_user_count: Optional[int] = None
-    dormant_user_count: Optional[int] = None
-    device_count: Optional[int] = None
-    device_encryption_pct: Optional[float] = None
-    screen_lock_enforced: Optional[bool] = None
-    dlp_rules_active: Optional[bool] = None
+    super_admin_count: int | None = None
+    total_user_count: int | None = None
+    dormant_user_count: int | None = None
+    device_count: int | None = None
+    device_encryption_pct: float | None = None
+    screen_lock_enforced: bool | None = None
+    dlp_rules_active: bool | None = None
     dlp_rule_count: int = 0
-    vault_retention_active: Optional[bool] = None
+    vault_retention_active: bool | None = None
     data_source: str  # "live_google_workspace_api", "live_dns_hybrid", "preset_scenario_simulation"
     verified_at: str
-    account_role: Optional[str] = "STANDARD_USER"  # "SUPER_ADMIN", "DELEGATED_ADMIN", "STANDARD_USER"
-    verified_account: Optional[str] = None
+    account_role: str | None = "STANDARD_USER"  # "SUPER_ADMIN", "DELEGATED_ADMIN", "STANDARD_USER"
+    verified_account: str | None = None
     delegation_verified: bool = False
     directory_access_granted: bool = False
     reports_access_granted: bool = False
@@ -178,22 +179,27 @@ PRESET_PROFILES = {
     }
 }
 
-async def resolve_dns_txt_records(domain: str) -> list[str]:
-    """Resolves TXT records using local dnspython with Google Public DNS HTTPS fallback."""
-    records = []
-    # 1. Try local DNS resolver
+def _resolve_dns_txt_local(domain: str) -> list[str]:
+    """Synchronous DNS TXT resolution to run in worker thread."""
     try:
         resolver = dns.resolver.Resolver()
         resolver.timeout = 2.0
         resolver.lifetime = 2.0
         answers = resolver.resolve(domain, 'TXT')
+        records = []
         for rdata in answers:
             txt_str = "".join([part.decode('utf-8', errors='ignore') if isinstance(part, bytes) else str(part) for part in rdata.strings])
             records.append(txt_str)
-        if records:
-            return records
+        return records
     except Exception:
-        pass
+        return []
+
+async def resolve_dns_txt_records(domain: str) -> list[str]:
+    """Resolves TXT records using local dnspython (non-blocking) with Google Public DNS HTTPS fallback."""
+    # 1. Try local DNS resolver via threadpool so event loop is never blocked
+    records = await asyncio.to_thread(_resolve_dns_txt_local, domain)
+    if records:
+        return records
 
     # 2. Fallback to Google DNS over HTTPS (dns.google)
     try:
@@ -210,7 +216,7 @@ async def resolve_dns_txt_records(domain: str) -> list[str]:
 
     return records
 
-async def check_email_security(domain: str) -> Dict[str, Any]:
+async def check_email_security(domain: str) -> dict[str, Any]:
     """Queries live DNS for SPF, DMARC, and DKIM posture."""
     clean_domain = domain.lower().strip().replace("http://", "").replace("https://", "").split("/")[0]
     
@@ -324,7 +330,7 @@ def classify_google_403(err_msg: str, endpoint_name: str) -> tuple[str, str]:
     else:
         return "WORKSPACE_RBAC_FORBIDDEN", f"HTTP 403 Forbidden: {err_msg}"
 
-async def fetch_live_google_workspace_telemetry(access_token: str, target_domain: str) -> Dict[str, Any]:
+async def fetch_live_google_workspace_telemetry(access_token: str, target_domain: str) -> dict[str, Any]:
     """
     Makes authentic, read-only REST calls to Google APIs using the OAuth access token.
     Zero-retention: Raw payloads are parsed in memory and discarded.
@@ -356,18 +362,18 @@ async def fetch_live_google_workspace_telemetry(access_token: str, target_domain
     dlp_error_detail = None
 
     # Telemetry metrics initialized to None (unverified)
-    mfa_enforced: Optional[bool] = None
-    mfa_enrolled_pct: Optional[float] = None
+    mfa_enforced: bool | None = None
+    mfa_enrolled_pct: float | None = None
     mfa_method_tier: str = "UNVERIFIED"
-    super_admin_count: Optional[int] = None
-    total_user_count: Optional[int] = None
-    dormant_user_count: Optional[int] = None
-    device_count: Optional[int] = None
-    device_encryption_pct: Optional[float] = None
-    screen_lock_enforced: Optional[bool] = None
-    dlp_rules_active: Optional[bool] = None
+    super_admin_count: int | None = None
+    total_user_count: int | None = None
+    dormant_user_count: int | None = None
+    device_count: int | None = None
+    device_encryption_pct: float | None = None
+    screen_lock_enforced: bool | None = None
+    dlp_rules_active: bool | None = None
     dlp_rule_count: int = 0
-    vault_retention_active: Optional[bool] = None
+    vault_retention_active: bool | None = None
 
     # Access grants
     directory_access_granted = False
@@ -665,9 +671,9 @@ async def collect_telemetry(
     domain: str, 
     organization_name: str,
     admin_consented: bool = True,
-    profile_override: Optional[str] = None,
-    access_token: Optional[str] = None
-) -> Dict[str, Any]:
+    profile_override: str | None = None,
+    access_token: str | None = None
+) -> dict[str, Any]:
     """
     Performs ephemeral collection of Workspace API telemetry and live DNS.
     Zero-retention: Raw API payloads are processed in memory and discarded.

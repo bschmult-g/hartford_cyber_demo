@@ -815,6 +815,13 @@
                 <span class="btn-transparency-pill" style="font-size:11px;">View Guide →</span>
               </div>
 
+              <!-- Inline Error Banner with Retry Mechanism -->
+              <div id="oauthErrorBanner" class="inline-error-banner" style="display:none;">
+                <span class="error-banner-icon">⚠️</span>
+                <div class="error-banner-text" id="oauthErrorMessage"></div>
+                <button type="button" class="btn-error-retry" onclick="triggerGoogleOAuth()">Retry</button>
+              </div>
+
               <!-- Auto-Verify Action Button -->
               <button class="btn-google-verify" id="btnTriggerGoogleVerify" onclick="triggerGoogleOAuth()">
                 <img src="/static/img/google_logo.svg" alt="Google" width="20">

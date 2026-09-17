@@ -3,9 +3,9 @@ Project Beacon - The Hartford Underwriting Rating Engine
 Evaluates security telemetry against cyber actuarial risk models.
 """
 
-from typing import Dict, Any, List
+from typing import Any
 
-def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
+def evaluate_risk(telemetry: dict[str, Any]) -> dict[str, Any]:
     """
     Evaluates in-memory telemetry against Hartford rating guidelines.
     Returns risk classification, premium quote, credits, and remediation steps.
@@ -21,8 +21,8 @@ def evaluate_risk(telemetry: Dict[str, Any]) -> Dict[str, Any]:
     base_limit = 2000000.00  # $2,000,000
     deductible = 5000.00
 
-    credits: List[Dict[str, Any]] = []
-    remediations: List[Dict[str, Any]] = []
+    credits: list[dict[str, Any]] = []
+    remediations: list[dict[str, Any]] = []
 
     # 0. Delegation & RBAC Gate:
     # If authenticated live, verify that the account possesses Delegated Admin or Super Admin privileges.

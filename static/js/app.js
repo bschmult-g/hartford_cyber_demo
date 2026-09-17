@@ -159,7 +159,24 @@ function syncDomainFromEmail() {
 
 let oauthPopup = null;
 
+function showOAuthError(msg) {
+  const banner = document.getElementById("oauthErrorBanner");
+  const msgEl = document.getElementById("oauthErrorMessage");
+  if (banner && msgEl) {
+    msgEl.textContent = msg || "An unexpected error occurred during Google Workspace authentication.";
+    banner.style.display = "flex";
+  }
+}
+
+function hideOAuthError() {
+  const banner = document.getElementById("oauthErrorBanner");
+  if (banner) {
+    banner.style.display = "none";
+  }
+}
+
 async function triggerGoogleOAuth() {
+  hideOAuthError();
   syncDomainFromEmail();
 
   const scanBox = document.getElementById("scanProgressBox");
@@ -241,7 +258,7 @@ async function triggerGoogleOAuth() {
         window.removeEventListener("message", handleAuthMessage);
         scanBox.classList.remove("active");
         verifyBtn.style.display = "flex";
-        alert("Google Verification Error: " + (event.data.error || "Authentication failed"));
+        showOAuthError("Google Verification: " + (event.data.error || "Authentication failed"));
       }
     };
 
@@ -264,7 +281,7 @@ async function triggerGoogleOAuth() {
     console.error("OAuth init failed:", err);
     scanBox.classList.remove("active");
     verifyBtn.style.display = "flex";
-    alert("Could not start Google Verification: " + err.message);
+    showOAuthError("Could not start Google Verification: " + err.message);
   }
 }
 

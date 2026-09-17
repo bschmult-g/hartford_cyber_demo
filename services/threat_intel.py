@@ -5,7 +5,7 @@ Enriches cyber underwriting with real-time sector threat levels, active threat a
 and comparative applicant posture assessments.
 """
 
-from typing import Dict, Any, List, Optional
+from typing import Any
 from pydantic import BaseModel
 
 class ThreatVector(BaseModel):
@@ -14,20 +14,20 @@ class ThreatVector(BaseModel):
     prevalence_pct: int
     severity: str  # "CRITICAL", "HIGH", "MEDIUM"
     description: str
-    relevant_controls: List[str]
+    relevant_controls: list[str]
 
 class SectorProfile(BaseModel):
     id: str
     display_name: str
     threat_level: str  # "CRITICAL", "ELEVATED", "MODERATE"
     threat_score: int  # 1-100 hazard scale
-    active_threat_actors: List[str]
+    active_threat_actors: list[str]
     trending_campaigns: str
     mandiant_intel_summary: str
-    primary_attack_vectors: List[ThreatVector]
+    primary_attack_vectors: list[ThreatVector]
     baseline_hazard_multiplier: float
 
-SECTOR_INTEL_PROFILES: Dict[str, Dict[str, Any]] = {
+SECTOR_INTEL_PROFILES: dict[str, dict[str, Any]] = {
     "legal_accounting": {
         "id": "legal_accounting",
         "display_name": "Legal, Accounting & Professional Advisory",
@@ -271,7 +271,7 @@ SECTOR_INTEL_PROFILES: Dict[str, Dict[str, Any]] = {
     }
 }
 
-def get_all_sector_profiles() -> List[Dict[str, Any]]:
+def get_all_sector_profiles() -> list[dict[str, Any]]:
     """Returns available Mandiant sector threat intelligence profiles."""
     return [
         {
@@ -287,9 +287,9 @@ def get_all_sector_profiles() -> List[Dict[str, Any]]:
     ]
 
 def assess_applicant_posture_against_threats(
-    telemetry: Dict[str, Any],
+    telemetry: dict[str, Any],
     industry_key: str = "legal_accounting"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Cross-references verified telemetry controls against Mandiant Threat Intelligence for the sector.
     Returns actuarial risk adjustments, posture fit scorecard, and underwriter action recommendations.

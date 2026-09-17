@@ -2658,3 +2658,48 @@ body {
   margin-top: 4px;
 }
 
+/* ==================== INLINE ERROR BANNER ==================== */
+.inline-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FEF2F2;
+  border: 1px solid #FCA5A5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  color: #991B1B;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.error-banner-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.error-banner-text {
+  flex: 1;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.btn-error-retry {
+  background: #DC2626;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.btn-error-retry:hover {
+  background: #B91C1C;
+}
+
+

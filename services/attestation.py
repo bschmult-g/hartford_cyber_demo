@@ -7,9 +7,9 @@ import hashlib
 import json
 import uuid
 import datetime
-from typing import Dict, Any
+from typing import Any
 
-def generate_attestation_receipt(telemetry: Dict[str, Any], rating: Dict[str, Any]) -> Dict[str, Any]:
+def generate_attestation_receipt(telemetry: dict[str, Any], rating: dict[str, Any]) -> dict[str, Any]:
     """
     Creates an ephemeral attestation receipt.
     The raw telemetry payload is distilled into verified boolean flags and hashed.
