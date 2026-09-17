@@ -1712,13 +1712,13 @@ body {
 }
 
 .beacon-left-nav {
-  width: 250px;
-  min-width: 250px;
+  width: 280px;
+  min-width: 280px;
   background: #FFFFFF;
   border-right: 1px solid #E2E8F0;
   display: flex;
   flex-direction: column;
-  padding: 16px 10px;
+  padding: 16px 12px;
   gap: 16px;
   flex-shrink: 0;
   transition: width 0.22s ease, transform 0.22s ease, opacity 0.22s ease;
@@ -1775,22 +1775,23 @@ body {
 }
 
 .gcp-nav-section-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  color: #94A3B8;
+  color: #5F6368;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  padding: 6px 10px 4px 10px;
+  padding: 6px 12px 4px 12px;
 }
 
 .gcp-nav-item {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
   width: 100%;
-  padding: 9px 10px;
+  padding: 10px 12px;
   border-radius: 6px;
   border: 1px solid transparent;
+  border-left: 3px solid transparent;
   background: transparent;
   cursor: pointer;
   text-align: left;
@@ -1802,33 +1803,43 @@ body {
 .gcp-nav-item:hover {
   background: #F1F5F9;
   border-color: #E2E8F0;
+  border-left-color: #CBD5E1;
 }
 
 .gcp-nav-item.active {
   background: #E8F0FE;
-  border-color: #C2E7FF;
+  border-color: #D2E3FC;
+  border-left-color: #1A73E8;
 }
 
 .gcp-nav-icon {
-  font-size: 17px;
-  line-height: 1;
+  font-size: 18px;
+  line-height: 1.25;
   flex-shrink: 0;
   width: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 1px;
 }
 
 .gcp-nav-content {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
 
+.gcp-nav-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
 .gcp-nav-label {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #1F2937;
   line-height: 1.25;
@@ -1840,20 +1851,30 @@ body {
   font-weight: 700;
 }
 
+.gcp-nav-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
 .gcp-nav-subtext {
-  font-size: 10.5px;
+  font-size: 11px;
   color: #64748B;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .gcp-nav-badge {
   font-size: 9px;
   font-weight: 800;
-  padding: 2px 5px;
+  padding: 1.5px 6px;
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   flex-shrink: 0;
+  line-height: 1.3;
 }
 
 .gcp-nav-badge.badge-blue {
@@ -2093,7 +2114,7 @@ body {
   }
   .beacon-left-nav.collapsed {
     transform: translateX(-100%);
-    width: 250px !important;
+    width: 280px !important;
     opacity: 1 !important;
     pointer-events: auto !important;
   }

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Hartford - Cyber Insurance Flow | Project Beacon PoT</title>
-  <link rel="stylesheet" href="/static/css/styles.css?v=6.0">
+  <link rel="stylesheet" href="/static/css/styles.css?v=7.0">
   <link rel="icon" type="image/png" href="/static/img/hartford_logo.png">
   <style>
     /* Inlined Core Layout & Google Cloud Sidebar Styles (Immune to Cache Delays) */
@@ -34,7 +34,8 @@
       color: #1F2937;
     }
     .beacon-left-nav {
-      width: 250px;
+      width: 280px;
+      min-width: 280px;
       flex-shrink: 0;
       background: #FFFFFF;
       border-right: 1px solid #E2E8F0;
@@ -44,14 +45,17 @@
       padding: 16px 12px;
       box-shadow: 1px 0 3px rgba(0, 0, 0, 0.02);
       transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), padding 0.25s ease, opacity 0.2s ease;
+      overflow-y: auto;
+      box-sizing: border-box;
     }
     .beacon-left-nav.collapsed {
-      width: 0;
-      padding: 0;
-      border-right: none;
-      overflow: hidden;
-      opacity: 0;
-      pointer-events: none;
+      width: 0 !important;
+      min-width: 0 !important;
+      padding: 0 !important;
+      border-right: none !important;
+      overflow: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
     }
     .app-main-content {
       flex: 1;
@@ -69,41 +73,56 @@
       color: #5F6368;
       letter-spacing: 0.8px;
       text-transform: uppercase;
-      padding: 8px 12px 4px 12px;
+      padding: 6px 12px 4px 12px;
     }
     .gcp-nav-item {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 12px;
       width: 100%;
       padding: 10px 12px;
-      border-radius: 8px;
+      border-radius: 6px;
       border: 1px solid transparent;
+      border-left: 3px solid transparent;
       background: transparent;
       cursor: pointer;
       text-align: left;
       transition: all 0.15s ease;
       user-select: none;
+      box-sizing: border-box;
     }
     .gcp-nav-item:hover {
       background: #F1F5F9;
       border-color: #E2E8F0;
+      border-left-color: #CBD5E1;
     }
     .gcp-nav-item.active {
       background: #E8F0FE;
-      border-color: #C2E7FF;
+      border-color: #D2E3FC;
+      border-left-color: #1A73E8;
     }
     .gcp-nav-icon {
       font-size: 18px;
-      line-height: 1;
+      line-height: 1.25;
       flex-shrink: 0;
+      width: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
     }
     .gcp-nav-content {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 4px;
       flex: 1;
       min-width: 0;
+    }
+    .gcp-nav-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
     }
     .gcp-nav-label {
       font-size: 13px;
@@ -116,19 +135,28 @@
       color: #1A73E8;
       font-weight: 700;
     }
+    .gcp-nav-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+    }
     .gcp-nav-subtext {
       font-size: 11px;
       color: #64748B;
       line-height: 1.2;
+      white-space: nowrap;
     }
     .gcp-nav-badge {
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 800;
-      padding: 2px 6px;
+      padding: 1.5px 6px;
       border-radius: 4px;
       text-transform: uppercase;
       letter-spacing: 0.4px;
       flex-shrink: 0;
+      line-height: 1.3;
     }
     .gcp-nav-badge.badge-blue {
       background: #EFF6FF;
@@ -205,9 +233,9 @@
       }
       .beacon-left-nav.collapsed {
         transform: translateX(-100%);
-        width: 250px;
-        opacity: 1;
-        pointer-events: auto;
+        width: 280px !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
       }
     }
   </style>
@@ -253,40 +281,56 @@
         <button type="button" class="gcp-nav-item" id="navItemGuide" onclick="openTransparencyModal('tabApis')" title="Customer Security & API Guide: View read-only scopes">
           <span class="gcp-nav-icon">🛡️</span>
           <div class="gcp-nav-content">
-            <span class="gcp-nav-label">Security &amp; API Guide</span>
-            <span class="gcp-nav-subtext">Read-Only Telemetry</span>
+            <div class="gcp-nav-title-row">
+              <span class="gcp-nav-label">Security &amp; API Guide</span>
+            </div>
+            <div class="gcp-nav-meta-row">
+              <span class="gcp-nav-subtext">Read-Only Telemetry</span>
+              <span class="gcp-nav-badge badge-blue">API Guide</span>
+            </div>
           </div>
-          <span class="gcp-nav-badge badge-blue">API Guide</span>
         </button>
 
         <!-- Stacked Tab 2: Underwriter Portal (Mandiant Threat Intel) -->
         <button type="button" class="gcp-nav-item" id="navItemUnderwriter" onclick="openTransparencyModal('tabThreatIntel')" title="Underwriter Portal: Mandiant Threat Intelligence & Sector Risk">
           <span class="gcp-nav-icon">🎯</span>
           <div class="gcp-nav-content">
-            <span class="gcp-nav-label">Underwriter Portal</span>
-            <span class="gcp-nav-subtext">Mandiant Threat Intel</span>
+            <div class="gcp-nav-title-row">
+              <span class="gcp-nav-label">Underwriter Portal</span>
+            </div>
+            <div class="gcp-nav-meta-row">
+              <span class="gcp-nav-subtext">Mandiant Threat Intel</span>
+              <span class="gcp-nav-badge badge-mandiant">Mandiant</span>
+            </div>
           </div>
-          <span class="gcp-nav-badge badge-mandiant">Mandiant</span>
         </button>
 
         <!-- Stacked Tab 3: Underwriter Studio & What-If -->
         <button type="button" class="gcp-nav-item" id="navItemStudio" onclick="toggleStudioDrawer()" title="Underwriter Studio: Toggle What-If Actuarial Simulator">
           <span class="gcp-nav-icon">⚙️</span>
           <div class="gcp-nav-content">
-            <span class="gcp-nav-label">Underwriter Studio</span>
-            <span class="gcp-nav-subtext">What-If Simulator</span>
+            <div class="gcp-nav-title-row">
+              <span class="gcp-nav-label">Underwriter Studio</span>
+            </div>
+            <div class="gcp-nav-meta-row">
+              <span class="gcp-nav-subtext">What-If Simulator</span>
+              <span class="gcp-nav-badge badge-gray">What-If</span>
+            </div>
           </div>
-          <span class="gcp-nav-badge badge-gray">What-If</span>
         </button>
 
         <!-- Stacked Tab 4: Zero-Retention Proof -->
         <button type="button" class="gcp-nav-item" id="navItemCrypto" onclick="openTransparencyModal('tabCrypto')" title="Zero-Retention Cryptographic Verification">
           <span class="gcp-nav-icon">🔐</span>
           <div class="gcp-nav-content">
-            <span class="gcp-nav-label">Zero-Retention Proof</span>
-            <span class="gcp-nav-subtext">SOC 2 / ISO 27001</span>
+            <div class="gcp-nav-title-row">
+              <span class="gcp-nav-label">Zero-Retention Proof</span>
+            </div>
+            <div class="gcp-nav-meta-row">
+              <span class="gcp-nav-subtext">SOC 2 / ISO 27001</span>
+              <span class="gcp-nav-badge badge-green">Ephemeral</span>
+            </div>
           </div>
-          <span class="gcp-nav-badge badge-green">Ephemeral</span>
         </button>
       </div>
 
