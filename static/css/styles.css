@@ -1701,50 +1701,121 @@ body {
   margin-top: 4px;
 }
 
-/* Header and Banner Transparency Enhancements */
-.header-center-action {
+/* ==================== LEFT-DOCKED NAVIGATION TABS ==================== */
+.left-dock-tabs {
+  position: fixed;
+  left: 0;
+  top: 110px;
+  z-index: 550;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.dock-tab-btn {
   display: flex;
   align-items: center;
-}
-
-.btn-header-guide {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #EFF6FF;
-  color: #1D4ED8;
-  border: 1.5px solid #3B82F6;
-  border-radius: 9999px;
-  padding: 8px 18px;
-  font-size: 13px;
-  font-weight: 700;
+  gap: 10px;
+  border-radius: 0 10px 10px 0;
+  border: 1px solid #CBD5E1;
+  border-left: 4px solid #2563EB;
+  padding: 8px 14px 8px 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(59, 130, 246, 0.2);
+  text-align: left;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.07);
+  background: #FFFFFF;
+  user-select: none;
 }
 
-.btn-header-guide:hover {
-  background: #1D4ED8;
-  color: #FFFFFF;
-  border-color: #1D4ED8;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
+.dock-tab-btn:hover {
+  transform: translateX(5px);
+  box-shadow: 4px 6px 18px rgba(0, 0, 0, 0.12);
 }
 
-.btn-header-guide:hover .guide-badge {
-  background: rgba(255, 255, 255, 0.25);
-  color: #FFFFFF;
+.dock-tab-btn:active {
+  transform: translateX(2px) scale(0.99);
 }
 
-.guide-badge {
-  background: #DBEAFE;
-  color: #1E40AF;
-  font-size: 10px;
+/* Tab 1: Customer Security & API Guide */
+.dock-tab-btn.dock-tab-guide {
+  background: #FFFFFF;
+  border-color: #BFDBFE;
+  border-left: 4px solid #2563EB;
+}
+
+.dock-tab-btn.dock-tab-guide:hover {
+  background: #F0F7FF;
+  border-color: #3B82F6;
+  border-left-color: #1D4ED8;
+}
+
+.dock-tab-btn.dock-tab-guide .dock-tab-title {
+  color: #1E3A8A;
+}
+
+/* Tab 2: Underwriter Portal */
+.dock-tab-btn.dock-tab-underwriter {
+  background: #0F172A;
+  border-color: #334155;
+  border-left: 4px solid #EA580C;
+  box-shadow: 2px 4px 14px rgba(15, 23, 42, 0.22);
+}
+
+.dock-tab-btn.dock-tab-underwriter:hover {
+  background: #1E293B;
+  border-color: #475569;
+  border-left-color: #F97316;
+  box-shadow: 4px 6px 20px rgba(15, 23, 42, 0.3);
+}
+
+.dock-tab-btn.dock-tab-underwriter .dock-tab-title {
+  color: #F8FAFC;
+}
+
+.dock-tab-icon {
+  font-size: 18px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dock-tab-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dock-tab-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.dock-tab-badge {
+  display: inline-block;
+  font-size: 9.5px;
   font-weight: 800;
-  padding: 2px 7px;
+  padding: 1px 6px;
   border-radius: 999px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  width: fit-content;
+  line-height: 1.3;
+}
+
+.dock-tab-badge.badge-blue {
+  background: #DBEAFE;
+  color: #1D4ED8;
+}
+
+.dock-tab-badge.badge-mandiant {
+  background: #EA580C;
+  color: #FFFFFF;
 }
 
 .btn-guide-floating {
@@ -1898,7 +1969,7 @@ body {
 }
 
 @media (max-width: 768px) {
-  .header-center-action {
+  .left-dock-tabs {
     display: none;
   }
   .landing-transparency-card {

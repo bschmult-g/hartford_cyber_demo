@@ -17,26 +17,33 @@
       <div class="header-title" id="headerSubTitle">Small Business Insurance Quote</div>
     </div>
 
-    <!-- Direct Header Transparency Tab / Button (Accessible Across All Steps) -->
-    <div class="header-center-action" style="display:flex; align-items:center; gap:8px;">
-      <button type="button" class="btn-header-guide" onclick="openTransparencyModal('tabApis')" title="View what Google APIs verify in your environment">
-        <span class="guide-icon">🛡️</span>
-        <span class="guide-text">Customer Security &amp; API Guide</span>
-        <span class="guide-badge">Read-Only Scopes</span>
-      </button>
-      <button type="button" class="btn-header-guide btn-header-underwriter" onclick="openTransparencyModal('tabThreatIntel')" title="Underwriter Risk Portal: Mandiant Threat Intelligence &amp; Sector Benchmark">
-        <span class="guide-icon">🎯</span>
-        <span class="guide-text">Underwriter Portal</span>
-        <span class="guide-badge badge-mandiant">Mandiant Threat Intel</span>
-      </button>
-    </div>
-
     <div class="header-support">
       <div>Need Help? Call The Hartford</div>
       <div class="header-phone">1-800-581-3703</div>
       <div style="font-size:11px;">M-F 8am to 8pm ET</div>
     </div>
   </header>
+
+  <!-- ==================== LEFT-DOCKED NAVIGATION TABS ==================== -->
+  <aside class="left-dock-tabs" aria-label="Quick Access Guides">
+    <!-- Tab 1: Customer Security & API Guide -->
+    <button type="button" class="dock-tab-btn dock-tab-guide" onclick="openTransparencyModal('tabApis')" title="Customer Security & API Guide: View read-only scopes">
+      <span class="dock-tab-icon">🛡️</span>
+      <div class="dock-tab-body">
+        <span class="dock-tab-title">Security &amp; API Guide</span>
+        <span class="dock-tab-badge badge-blue">Read-Only Scopes</span>
+      </div>
+    </button>
+
+    <!-- Tab 2: Underwriter Portal (Mandiant Threat Intel) -->
+    <button type="button" class="dock-tab-btn dock-tab-underwriter" onclick="openTransparencyModal('tabThreatIntel')" title="Underwriter Portal: Mandiant Threat Intelligence & Sector Risk">
+      <span class="dock-tab-icon">🎯</span>
+      <div class="dock-tab-body">
+        <span class="dock-tab-title">Underwriter Portal</span>
+        <span class="dock-tab-badge badge-mandiant">Mandiant Threat Intel</span>
+      </div>
+    </button>
+  </aside>
 
   <!-- Stepper Indicator (Slides 3-6) -->
   <div class="stepper-container" id="stepperNav" style="display:none;">
@@ -966,11 +973,7 @@
 
   <!-- ==================== FLOATING DEMO CONTROLS ==================== -->
   <div class="demo-floating-bar">
-    <button class="btn-studio-toggle btn-guide-floating" onclick="openTransparencyModal('tabApis')" title="Customer & IT Admin Technical Guide">
-      <span>🛡️</span>
-      <span>What Do APIs Verify?</span>
-    </button>
-    <button class="btn-studio-toggle" onclick="toggleStudioDrawer()">
+    <button class="btn-studio-toggle" onclick="toggleStudioDrawer()" title="Underwriter Studio: Toggle What-If Actuarial Simulator">
       <span>⚙️</span>
       <span>Underwriter Studio &amp; What-If</span>
     </button>
