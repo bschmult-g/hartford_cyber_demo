@@ -1288,6 +1288,10 @@ function closeTransparencyModal() {
   if (modal) {
     modal.style.display = "none";
   }
+  ['navItemGuide', 'navItemUnderwriter', 'navItemStudio', 'navItemCrypto'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("active");
+  });
 }
 
 function handleModalOverlayClick(event) {
@@ -1298,15 +1302,16 @@ function handleModalOverlayClick(event) {
 
 function switchTransparencyTab(tabId) {
   const tabBtns = [
-    { id: 'tabApis', btnId: 'btnTabApis' },
-    { id: 'tabPrivacy', btnId: 'btnTabPrivacy' },
-    { id: 'tabCrypto', btnId: 'btnTabCrypto' },
-    { id: 'tabThreatIntel', btnId: 'btnTabThreatIntel' }
+    { id: 'tabApis', btnId: 'btnTabApis', navId: 'navItemGuide' },
+    { id: 'tabPrivacy', btnId: 'btnTabPrivacy', navId: null },
+    { id: 'tabCrypto', btnId: 'btnTabCrypto', navId: 'navItemCrypto' },
+    { id: 'tabThreatIntel', btnId: 'btnTabThreatIntel', navId: 'navItemUnderwriter' }
   ];
 
   tabBtns.forEach(t => {
     const tabEl = document.getElementById(t.id);
     const btnEl = document.getElementById(t.btnId);
+    const navEl = t.navId ? document.getElementById(t.navId) : null;
 
     if (tabEl) {
       if (t.id === tabId) {
@@ -1321,6 +1326,14 @@ function switchTransparencyTab(tabId) {
         btnEl.classList.add("active");
       } else {
         btnEl.classList.remove("active");
+      }
+    }
+
+    if (navEl) {
+      if (t.id === tabId) {
+        navEl.classList.add("active");
+      } else {
+        navEl.classList.remove("active");
       }
     }
   });
@@ -1575,4 +1588,12 @@ function resetStep5ToPrecheck() {
 function retriggerVerification() {
   resetStep5ToPrecheck();
   triggerGoogleOAuth();
+}
+
+/* ==================== BEACON LEFT NAV CONTROLLER ==================== */
+function toggleBeaconLeftNav() {
+  const nav = document.getElementById("beaconLeftNav");
+  if (nav) {
+    nav.classList.toggle("collapsed");
+  }
 }

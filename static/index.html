@@ -4,17 +4,232 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Hartford - Cyber Insurance Flow | Project Beacon PoT</title>
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <link rel="stylesheet" href="/static/css/styles.css?v=6.0">
   <link rel="icon" type="image/png" href="/static/img/hartford_logo.png">
+  <style>
+    /* Inlined Core Layout & Google Cloud Sidebar Styles (Immune to Cache Delays) */
+    .app-layout {
+      display: flex;
+      min-height: calc(100vh - 76px);
+      position: relative;
+      background: #F4F6F8;
+    }
+    .btn-sidebar-hamburger {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: #5F6368;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      flex-shrink: 0;
+    }
+    .btn-sidebar-hamburger:hover {
+      background: #F1F3F4;
+      color: #1F2937;
+    }
+    .beacon-left-nav {
+      width: 250px;
+      flex-shrink: 0;
+      background: #FFFFFF;
+      border-right: 1px solid #E2E8F0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 16px 12px;
+      box-shadow: 1px 0 3px rgba(0, 0, 0, 0.02);
+      transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1), padding 0.25s ease, opacity 0.2s ease;
+    }
+    .beacon-left-nav.collapsed {
+      width: 0;
+      padding: 0;
+      border-right: none;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .app-main-content {
+      flex: 1;
+      min-width: 0;
+      padding: 0 16px 48px 16px;
+    }
+    .gcp-nav-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .gcp-nav-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #5F6368;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 8px 12px 4px 12px;
+    }
+    .gcp-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .gcp-nav-item:hover {
+      background: #F1F5F9;
+      border-color: #E2E8F0;
+    }
+    .gcp-nav-item.active {
+      background: #E8F0FE;
+      border-color: #C2E7FF;
+    }
+    .gcp-nav-icon {
+      font-size: 18px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .gcp-nav-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+    .gcp-nav-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1F2937;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+    .gcp-nav-item.active .gcp-nav-label {
+      color: #1A73E8;
+      font-weight: 700;
+    }
+    .gcp-nav-subtext {
+      font-size: 11px;
+      color: #64748B;
+      line-height: 1.2;
+    }
+    .gcp-nav-badge {
+      font-size: 9.5px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      flex-shrink: 0;
+    }
+    .gcp-nav-badge.badge-blue {
+      background: #EFF6FF;
+      color: #1D4ED8;
+      border: 1px solid #DBEAFE;
+    }
+    .gcp-nav-badge.badge-mandiant {
+      background: #FFF7ED;
+      color: #C2410C;
+      border: 1px solid #FFEDD5;
+    }
+    .gcp-nav-badge.badge-gray {
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #E2E8F0;
+    }
+    .gcp-nav-badge.badge-green {
+      background: #F0FDF4;
+      color: #15803D;
+      border: 1px solid #DCFCE7;
+    }
+    .gcp-pro-tip-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 4px 4px 8px 4px;
+    }
+    .gcp-pro-tip-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #1E293B;
+      margin-bottom: 4px;
+    }
+    .gcp-pro-tip-text {
+      font-size: 11px;
+      color: #64748B;
+      line-height: 1.45;
+    }
+    .gcp-nav-footer {
+      margin-top: auto;
+      border-top: 1px solid #F1F5F9;
+      padding-top: 12px;
+    }
+    .gcp-status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+    }
+    .gcp-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+    .gcp-status-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #334155;
+    }
+    @media (max-width: 900px) {
+      .beacon-left-nav {
+        position: fixed;
+        top: 76px;
+        left: 0;
+        bottom: 0;
+        z-index: 700;
+        box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+      }
+      .beacon-left-nav.collapsed {
+        transform: translateX(-100%);
+        width: 250px;
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+  </style>
 </head>
 <body>
 
-
   <!-- Main The Hartford Header -->
   <header class="hartford-header">
-    <div class="header-brand" onclick="navigateToHome()" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); navigateToHome(); }" style="cursor: pointer;" role="button" tabindex="0" title="Return to Home" aria-label="Return to Home">
-      <img src="/static/img/hartford_logo.png" alt="The Hartford Logo">
-      <div class="header-title" id="headerSubTitle">Small Business Insurance Quote</div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <!-- Google Cloud Style Hamburger Menu Toggle -->
+      <button type="button" class="btn-sidebar-hamburger" onclick="toggleBeaconLeftNav()" title="Toggle Navigation Menu" aria-label="Toggle Navigation Menu">
+        <span>☰</span>
+      </button>
+
+      <div class="header-brand" onclick="navigateToHome()" onkeydown="if(event.key==='Enter'||event.key===' ') { event.preventDefault(); navigateToHome(); }" style="cursor: pointer;" role="button" tabindex="0" title="Return to Home" aria-label="Return to Home">
+        <img src="/static/img/hartford_logo.png" alt="The Hartford Logo">
+        <div class="header-title" id="headerSubTitle">
+          Small Business Insurance Quote 
+          <span style="color:#CBD5E1; margin:0 6px; font-weight:400;">/</span> 
+          <span style="color:var(--hartford-maroon); font-weight:700;">Project Beacon</span>
+        </div>
+      </div>
     </div>
 
     <div class="header-support">
@@ -24,26 +239,84 @@
     </div>
   </header>
 
-  <!-- ==================== LEFT-DOCKED NAVIGATION TABS ==================== -->
-  <aside class="left-dock-tabs" aria-label="Quick Access Guides">
-    <!-- Tab 1: Customer Security & API Guide -->
-    <button type="button" class="dock-tab-btn dock-tab-guide" onclick="openTransparencyModal('tabApis')" title="Customer Security & API Guide: View read-only scopes">
-      <span class="dock-tab-icon">🛡️</span>
-      <div class="dock-tab-body">
-        <span class="dock-tab-title">Security &amp; API Guide</span>
-        <span class="dock-tab-badge badge-blue">Read-Only Scopes</span>
-      </div>
-    </button>
+  <!-- ==================== APP LAYOUT: SIDEBAR + MAIN CONTENT ==================== -->
+  <div class="app-layout" id="appLayout">
 
-    <!-- Tab 2: Underwriter Portal (Mandiant Threat Intel) -->
-    <button type="button" class="dock-tab-btn dock-tab-underwriter" onclick="openTransparencyModal('tabThreatIntel')" title="Underwriter Portal: Mandiant Threat Intelligence & Sector Risk">
-      <span class="dock-tab-icon">🎯</span>
-      <div class="dock-tab-body">
-        <span class="dock-tab-title">Underwriter Portal</span>
-        <span class="dock-tab-badge badge-mandiant">Mandiant Threat Intel</span>
+    <!-- ==================== GOOGLE CLOUD STYLE LEFT NAVIGATION ==================== -->
+    <aside class="beacon-left-nav" id="beaconLeftNav" aria-label="Beacon Platform Navigation">
+      
+      <!-- Section 1: Navigation Home (Matching Screenshot) -->
+      <div class="gcp-nav-section">
+        <div class="gcp-nav-section-title">NAVIGATOR HOME</div>
+
+        <!-- Stacked Tab 1: Customer Security & API Guide -->
+        <button type="button" class="gcp-nav-item" id="navItemGuide" onclick="openTransparencyModal('tabApis')" title="Customer Security & API Guide: View read-only scopes">
+          <span class="gcp-nav-icon">🛡️</span>
+          <div class="gcp-nav-content">
+            <span class="gcp-nav-label">Security &amp; API Guide</span>
+            <span class="gcp-nav-subtext">Read-Only Telemetry</span>
+          </div>
+          <span class="gcp-nav-badge badge-blue">API Guide</span>
+        </button>
+
+        <!-- Stacked Tab 2: Underwriter Portal (Mandiant Threat Intel) -->
+        <button type="button" class="gcp-nav-item" id="navItemUnderwriter" onclick="openTransparencyModal('tabThreatIntel')" title="Underwriter Portal: Mandiant Threat Intelligence & Sector Risk">
+          <span class="gcp-nav-icon">🎯</span>
+          <div class="gcp-nav-content">
+            <span class="gcp-nav-label">Underwriter Portal</span>
+            <span class="gcp-nav-subtext">Mandiant Threat Intel</span>
+          </div>
+          <span class="gcp-nav-badge badge-mandiant">Mandiant</span>
+        </button>
+
+        <!-- Stacked Tab 3: Underwriter Studio & What-If -->
+        <button type="button" class="gcp-nav-item" id="navItemStudio" onclick="toggleStudioDrawer()" title="Underwriter Studio: Toggle What-If Actuarial Simulator">
+          <span class="gcp-nav-icon">⚙️</span>
+          <div class="gcp-nav-content">
+            <span class="gcp-nav-label">Underwriter Studio</span>
+            <span class="gcp-nav-subtext">What-If Simulator</span>
+          </div>
+          <span class="gcp-nav-badge badge-gray">What-If</span>
+        </button>
+
+        <!-- Stacked Tab 4: Zero-Retention Proof -->
+        <button type="button" class="gcp-nav-item" id="navItemCrypto" onclick="openTransparencyModal('tabCrypto')" title="Zero-Retention Cryptographic Verification">
+          <span class="gcp-nav-icon">🔐</span>
+          <div class="gcp-nav-content">
+            <span class="gcp-nav-label">Zero-Retention Proof</span>
+            <span class="gcp-nav-subtext">SOC 2 / ISO 27001</span>
+          </div>
+          <span class="gcp-nav-badge badge-green">Ephemeral</span>
+        </button>
       </div>
-    </button>
-  </aside>
+
+      <!-- Section 2: Explore Navigator / Pro Tip Card (Matching Screenshot) -->
+      <div class="gcp-nav-section">
+        <div class="gcp-nav-section-title">EXPLORE NAVIGATOR</div>
+        <div class="gcp-pro-tip-card">
+          <div class="gcp-pro-tip-header">
+            <span>💡</span>
+            <strong>Pro Tip: Zero-Retention</strong>
+          </div>
+          <p class="gcp-pro-tip-text">
+            Customer telemetry is evaluated ephemerally in RAM. No employee files or passwords are ever stored.
+          </p>
+        </div>
+      </div>
+
+      <!-- Section 3: System Status (Matching Screenshot) -->
+      <div class="gcp-nav-section gcp-nav-footer">
+        <div class="gcp-nav-section-title">SYSTEM STATUS</div>
+        <div class="gcp-status-row">
+          <span class="gcp-status-dot"></span>
+          <span class="gcp-status-label">Google Workspace APIs Live</span>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="app-main-content">
 
   <!-- Stepper Indicator (Slides 3-6) -->
   <div class="stepper-container" id="stepperNav" style="display:none;">
@@ -968,6 +1241,8 @@
     </section>
 
   </main>
+  </div> <!-- /app-main-content -->
+</div> <!-- /app-layout -->
 
   <!-- Real Google OAuth 2.0 Flow active via Google Auth Platform -->
 

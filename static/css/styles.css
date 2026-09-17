@@ -1701,121 +1701,235 @@ body {
   margin-top: 4px;
 }
 
-/* ==================== LEFT-DOCKED NAVIGATION TABS ==================== */
-.left-dock-tabs {
-  position: fixed;
-  left: 0;
-  top: 110px;
-  z-index: 550;
+/* ==================== APP LAYOUT & GOOGLE CLOUD STYLE LEFT NAVIGATION ==================== */
+.app-layout {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  pointer-events: auto;
+  flex-direction: row;
+  min-height: calc(100vh - 76px);
+  width: 100%;
+  position: relative;
+  background: #F8FAFC;
 }
 
-.dock-tab-btn {
+.beacon-left-nav {
+  width: 250px;
+  min-width: 250px;
+  background: #FFFFFF;
+  border-right: 1px solid #E2E8F0;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 10px;
+  gap: 16px;
+  flex-shrink: 0;
+  transition: width 0.22s ease, transform 0.22s ease, opacity 0.22s ease;
+  overflow-y: auto;
+  box-sizing: border-box;
+  z-index: 100;
+}
+
+.beacon-left-nav.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-right: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.btn-sidebar-hamburger {
+  background: transparent;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.btn-sidebar-hamburger:hover {
+  background: #F1F5F9;
+  color: #0F172A;
+  border-color: #CBD5E1;
+}
+
+.app-main-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.gcp-nav-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gcp-nav-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #94A3B8;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 6px 10px 4px 10px;
+}
+
+.gcp-nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  border-radius: 0 10px 10px 0;
-  border: 1px solid #CBD5E1;
-  border-left: 4px solid #2563EB;
-  padding: 8px 14px 8px 10px;
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
   cursor: pointer;
   text-align: left;
-  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.07);
-  background: #FFFFFF;
+  transition: all 0.15s ease;
   user-select: none;
+  box-sizing: border-box;
 }
 
-.dock-tab-btn:hover {
-  transform: translateX(5px);
-  box-shadow: 4px 6px 18px rgba(0, 0, 0, 0.12);
+.gcp-nav-item:hover {
+  background: #F1F5F9;
+  border-color: #E2E8F0;
 }
 
-.dock-tab-btn:active {
-  transform: translateX(2px) scale(0.99);
+.gcp-nav-item.active {
+  background: #E8F0FE;
+  border-color: #C2E7FF;
 }
 
-/* Tab 1: Customer Security & API Guide */
-.dock-tab-btn.dock-tab-guide {
-  background: #FFFFFF;
-  border-color: #BFDBFE;
-  border-left: 4px solid #2563EB;
-}
-
-.dock-tab-btn.dock-tab-guide:hover {
-  background: #F0F7FF;
-  border-color: #3B82F6;
-  border-left-color: #1D4ED8;
-}
-
-.dock-tab-btn.dock-tab-guide .dock-tab-title {
-  color: #1E3A8A;
-}
-
-/* Tab 2: Underwriter Portal */
-.dock-tab-btn.dock-tab-underwriter {
-  background: #0F172A;
-  border-color: #334155;
-  border-left: 4px solid #EA580C;
-  box-shadow: 2px 4px 14px rgba(15, 23, 42, 0.22);
-}
-
-.dock-tab-btn.dock-tab-underwriter:hover {
-  background: #1E293B;
-  border-color: #475569;
-  border-left-color: #F97316;
-  box-shadow: 4px 6px 20px rgba(15, 23, 42, 0.3);
-}
-
-.dock-tab-btn.dock-tab-underwriter .dock-tab-title {
-  color: #F8FAFC;
-}
-
-.dock-tab-icon {
-  font-size: 18px;
+.gcp-nav-icon {
+  font-size: 17px;
   line-height: 1;
+  flex-shrink: 0;
+  width: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
-.dock-tab-body {
+.gcp-nav-content {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
-.dock-tab-title {
-  font-size: 12px;
-  font-weight: 700;
+.gcp-nav-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1F2937;
   line-height: 1.25;
   white-space: nowrap;
 }
 
-.dock-tab-badge {
-  display: inline-block;
-  font-size: 9.5px;
+.gcp-nav-item.active .gcp-nav-label {
+  color: #1A73E8;
+  font-weight: 700;
+}
+
+.gcp-nav-subtext {
+  font-size: 10.5px;
+  color: #64748B;
+  line-height: 1.2;
+}
+
+.gcp-nav-badge {
+  font-size: 9px;
   font-weight: 800;
-  padding: 1px 6px;
-  border-radius: 999px;
+  padding: 2px 5px;
+  border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  width: fit-content;
-  line-height: 1.3;
+  flex-shrink: 0;
 }
 
-.dock-tab-badge.badge-blue {
-  background: #DBEAFE;
+.gcp-nav-badge.badge-blue {
+  background: #EFF6FF;
   color: #1D4ED8;
+  border: 1px solid #DBEAFE;
 }
 
-.dock-tab-badge.badge-mandiant {
-  background: #EA580C;
-  color: #FFFFFF;
+.gcp-nav-badge.badge-mandiant {
+  background: #FFF7ED;
+  color: #C2410C;
+  border: 1px solid #FFEDD5;
+}
+
+.gcp-nav-badge.badge-gray {
+  background: #F1F5F9;
+  color: #475569;
+  border: 1px solid #E2E8F0;
+}
+
+.gcp-nav-badge.badge-green {
+  background: #F0FDF4;
+  color: #15803D;
+  border: 1px solid #DCFCE7;
+}
+
+.gcp-pro-tip-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 4px 4px 8px 4px;
+}
+
+.gcp-pro-tip-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1E293B;
+  margin-bottom: 4px;
+}
+
+.gcp-pro-tip-text {
+  font-size: 11px;
+  color: #64748B;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.gcp-nav-footer {
+  margin-top: auto;
+  border-top: 1px solid #F1F5F9;
+  padding-top: 10px;
+}
+
+.gcp-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+}
+
+.gcp-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+.gcp-status-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
 }
 
 .btn-guide-floating {
@@ -1968,10 +2082,24 @@ body {
   border-color: #5EEAD4;
 }
 
-@media (max-width: 768px) {
-  .left-dock-tabs {
-    display: none;
+@media (max-width: 900px) {
+  .beacon-left-nav {
+    position: fixed;
+    top: 76px;
+    left: 0;
+    bottom: 0;
+    z-index: 700;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
   }
+  .beacon-left-nav.collapsed {
+    transform: translateX(-100%);
+    width: 250px !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+}
+
+@media (max-width: 768px) {
   .landing-transparency-card {
     flex-direction: column;
     align-items: flex-start;
